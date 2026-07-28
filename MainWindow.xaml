@@ -1,0 +1,309 @@
+<Window x:Class="VideoLibrarySystemVlc.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:VideoLibrarySystemVlc.Converters"
+        Title="Video Library System VLC"
+        Width="1400"
+        Height="900"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <conv:PathLeafConverter x:Key="PathLeafConverter" />
+        <conv:ImagePathConverter x:Key="ImagePathConverter" />
+
+        <Style TargetType="ListBox">
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style x:Key="TileButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="0,8,0,0" />
+            <Setter Property="Padding" Value="10,4" />
+        </Style>
+
+        <Style x:Key="RootButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Padding" Value="10,4" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Video Library System VLC" FontSize="22" FontWeight="SemiBold" />
+			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0"  />
+        </DockPanel>
+
+        <TabControl Grid.Row="1" x:Name="MediaTabs">
+            <TabItem Header="Series">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="270" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Series roots" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <ListBox ItemsSource="{Binding SeriesRootOptions}" SelectedItem="{Binding SelectedSeriesRoot}" Height="430">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="Add Root" Style="{StaticResource RootButtonStyle}" Click="AddSeriesRoot_Click" />
+                            <Button Content="Remove Root" Style="{StaticResource RootButtonStyle}" Click="RemoveSeriesRoot_Click" />
+                            <Button Content="Scan" Style="{StaticResource RootButtonStyle}" Click="ScanSeries_Click" />
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ListBox ItemsSource="{Binding SeriesVisibleItems}" SelectedItem="{Binding SelectedSeriesItem}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionMode="Single"
+                                 Background="#FFF7F7F7">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel IsItemsHost="True" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Margin" Value="0,0,12,12" />
+                                    <Setter Property="Padding" Value="0" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="200" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="White" Padding="10">
+                                        <StackPanel>
+                                            <Border Height="140" CornerRadius="8" Background="#EFEFEF" ClipToBounds="True">
+                                                <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
+                                            </Border>
+                                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Height="44" TextWrapping="Wrap" MaxLines="2" VerticalContentAlignment="Top" />
+                                            <TextBlock Text="{Binding ContainerPath, Converter={StaticResource PathLeafConverter}}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" Height="34" TextTrimming="CharacterEllipsis" ToolTip="{Binding ContainerPath}" />
+                                            <TextBlock Text="{Binding EpisodeCount, StringFormat=Episodes: {0}}" FontSize="11" Margin="0,4,0,0" />
+                                            <Grid Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="34" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0"
+                                                        Content="Play Playlist"
+                                                        Padding="10,4"
+                                                        IsEnabled="{Binding CanStartPlayback}"
+                                                        Click="PlaySeriesPlaylist_Click" />
+                                                <Button Grid.Column="1"
+                                                        Content="▶"
+                                                        Margin="6,0,0,0"
+                                                        Padding="0"
+                                                        FontWeight="SemiBold"
+                                                        ToolTip="Resume from next episode"
+                                                        IsEnabled="{Binding CanStartPlayback}"
+                                                        Click="ResumeSeriesPlaylist_Click" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="#FAFAFA">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="260" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SelectedSeriesItem.Title}" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding SelectedSeriesItem.ContainerPath}" Foreground="Gray" TextWrapping="Wrap" />
+                                    <ListBox x:Name="SeriesEpisodeList"
+                                             ItemsSource="{Binding SelectedSeriesEpisodeEntries}"
+                                              Height="170"
+                                              Margin="0,10,0,0"
+                                              MouseDoubleClick="SeriesEpisodeList_MouseDoubleClick">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <DockPanel>
+                                                    <StackPanel DockPanel.Dock="Left"
+                                                                Orientation="Horizontal"
+                                                                Visibility="{Binding MarkerVisibility}"
+                                                                Margin="0,0,8,0">
+                                                        <TextBlock Text="▶"
+                                                                   FontSize="12"
+                                                                   Foreground="#FF2A6BBD"
+                                                                   Opacity="{Binding MarkerOpacity}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding MarkerRank}"
+                                                                   FontSize="10"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#FF2A6BBD"
+                                                                   Margin="3,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding FilePath, Converter={StaticResource PathLeafConverter}}"
+                                                               VerticalAlignment="Center" />
+                                                </DockPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                    <Grid Margin="0,0,8,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="34" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0"
+                                                Content="Play Playlist"
+                                                Padding="10,4"
+                                                IsEnabled="{Binding CanStartPlayback}"
+                                                Click="PlaySelectedSeriesPlaylist_Click" />
+                                        <Button Grid.Column="1"
+                                                Content="▶"
+                                                Margin="6,0,0,0"
+                                                Padding="0"
+                                                FontWeight="SemiBold"
+                                                ToolTip="Resume from next episode"
+                                                IsEnabled="{Binding CanStartPlayback}"
+                                                Click="ResumeSelectedSeriesPlaylist_Click" />
+                                    </Grid>
+                                    <Button Content="Play Selected Episode" Style="{StaticResource RootButtonStyle}" IsEnabled="{Binding CanStartPlayback}" Click="PlaySelectedSeriesEpisode_Click" />
+                                    <Button Content="Set Artwork" Style="{StaticResource RootButtonStyle}" Click="SetSelectedSeriesArtwork_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Movies">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="270" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Movie roots" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <ListBox ItemsSource="{Binding MovieRootOptions}" SelectedItem="{Binding SelectedMovieRoot}" Height="430">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="Add Root" Style="{StaticResource RootButtonStyle}" Click="AddMovieRoot_Click" />
+                            <Button Content="Remove Root" Style="{StaticResource RootButtonStyle}" Click="RemoveMovieRoot_Click" />
+                            <Button Content="Scan" Style="{StaticResource RootButtonStyle}" Click="ScanMovies_Click" />
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ListBox ItemsSource="{Binding MovieVisibleItems}" SelectedItem="{Binding SelectedMovieItem}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionMode="Single"
+                                 Background="#FFF7F7F7">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel IsItemsHost="True" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Margin" Value="0,0,12,12" />
+                                    <Setter Property="Padding" Value="0" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="200" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="White" Padding="10">
+                                        <StackPanel>
+                                            <Border Height="140" CornerRadius="8" Background="#EFEFEF" ClipToBounds="True">
+                                                <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
+                                            </Border>
+                                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Height="44" TextWrapping="Wrap" MaxLines="2" VerticalContentAlignment="Top" />
+                                            <TextBlock Text="{Binding ContainerPath, Converter={StaticResource PathLeafConverter}}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" Height="34" TextTrimming="CharacterEllipsis" ToolTip="{Binding ContainerPath}" />
+                                            <Button Content="Play" Style="{StaticResource TileButtonStyle}" IsEnabled="{Binding DataContext.CanStartPlayback, RelativeSource={RelativeSource AncestorType=Window}}" Click="PlayMovie_Click" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="#FAFAFA">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="260" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SelectedMovieItem.Title}" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding SelectedMovieItem.ContainerPath}" Foreground="Gray" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                    <Button Content="Play Movie" Style="{StaticResource RootButtonStyle}" IsEnabled="{Binding CanStartPlayback}" Click="PlaySelectedMovie_Click" />
+                                    <Button Content="Set Artwork" Style="{StaticResource RootButtonStyle}" Click="SetSelectedMovieArtwork_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Settings">
+                <Grid Margin="24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="VLC executable" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="1" Margin="0,8,0,12" Text="The app will try to detect VLC automatically. If it fails, browse to vlc.exe here." TextWrapping="Wrap" />
+
+					<WrapPanel Grid.Row="2">
+						<TextBox Text="{Binding VlcExecutablePath, UpdateSourceTrigger=PropertyChanged}" MinWidth="720" Margin="0,0,12,0" />
+
+						<StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Content="Browse..." Margin="0,0,8,0" Padding="10,4" Click="BrowseVlcPath_Click" />
+                            <Button Content="Detect" Margin="0,0,8,0" Padding="10,4" Click="DetectVlcPath_Click" />
+                            <Button Content="Save" Padding="10,4" Click="SaveVlcPath_Click" />
+                        </StackPanel>
+                    </WrapPanel>
+
+                    <TextBlock Grid.Row="3" Margin="0,16,0,0" Text="{Binding VlcPathStatus}" Foreground="Gray" TextWrapping="Wrap" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <StatusBar Grid.Row="2" Margin="0,12,0,0">
+            <StatusBarItem Content="{Binding StatusText}" />
+        </StatusBar>
+    </Grid>
+</Window>
