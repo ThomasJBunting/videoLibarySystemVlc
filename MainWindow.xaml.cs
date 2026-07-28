@@ -9,6 +9,8 @@ using VideoLibrarySystemVlc.Services;
 
 namespace VideoLibrarySystemVlc;
 
+
+
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
     private readonly JsonStateStore stateStore = new();
@@ -41,8 +43,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private string statusText = "Ready.";
     private string vlcExecutablePath = string.Empty;
     private string vlcPathStatus = string.Empty;
-
-    public MainWindow()
+	private bool isDarkMode = false;
+	public MainWindow()
     {
         InitializeComponent();
         Icon = IconFactory.CreateWindowIcon();
@@ -68,8 +70,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         Loaded += async (_, _) => await RefreshAllAsync();
         Closing += OnClosing;
     }
+	private void ToggleDarkMode_Click(object sender, RoutedEventArgs e)
+	{
+		var appResources = System.Windows.Application.Current.Resources.MergedDictionaries;
+		if (isDarkMode)
+		{
+			// Switch to Light Theme
+			appResources.Clear();
+			appResources.Add(new ResourceDictionary { Source = new Uri("ResourceDictionaries/LightTheme.xaml", UriKind.Relative) });
+			isDarkMode = false;
+		}
+		else
+		{
+			// Switch to Dark Theme
+			appResources.Clear();
+			appResources.Add(new ResourceDictionary { Source = new Uri("ResourceDictionaries/DarkTheme.xaml", UriKind.Relative) });
+			isDarkMode = true;
+		}
+	}
 
-    public ObservableCollection<LibraryRoot> SeriesRoots
+	public ObservableCollection<LibraryRoot> SeriesRoots
     {
         get => seriesRoots;
         set

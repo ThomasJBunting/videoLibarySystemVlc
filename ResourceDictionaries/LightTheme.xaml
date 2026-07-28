@@ -1,0 +1,8 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<!-- Colors need to be converted to a `SolidColorBrush` for properties like `Background`. -->
+	<SolidColorBrush x:Key="BackgroundColor" Color="#FFFFFF" />
+	<SolidColorBrush x:Key="CardBackgroundColor" Color="#F0F0F0" />
+	<SolidColorBrush x:Key="PrimaryTextColor" Color="#000000" />
+	<SolidColorBrush x:Key="SecondaryTextColor" Color="#666666" />
+</ResourceDictionary>

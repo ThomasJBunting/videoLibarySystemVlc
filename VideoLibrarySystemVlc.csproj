@@ -10,4 +10,7 @@
     <RootNamespace>VideoLibrarySystemVlc</RootNamespace>
     <ApplicationIcon>Assets\videotape.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="ResourceDictionaries\" />
+  </ItemGroup>
 </Project>

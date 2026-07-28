@@ -6,13 +6,16 @@
         Width="1400"
         Height="900"
         WindowState="Maximized"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundColor}"> 
     <Window.Resources>
         <conv:PathLeafConverter x:Key="PathLeafConverter" />
         <conv:ImagePathConverter x:Key="ImagePathConverter" />
 
         <Style TargetType="ListBox">
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundColor}" />
         </Style>
 
         <Style x:Key="TileButtonStyle" TargetType="Button">
@@ -34,12 +37,31 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock Text="Video Library System VLC" FontSize="22" FontWeight="SemiBold" />
-			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0"  />
+            <TextBlock Text="Video Library System VLC" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+			<Button Content="Toggle Dark Mode" DockPanel.Dock="Right" Click="ToggleDarkMode_Click" Margin="20,0,0,0" />
+			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource SecondaryTextColor}" />
         </DockPanel>
 
-        <TabControl Grid.Row="1" x:Name="MediaTabs">
-            <TabItem Header="Series">
+		<TabControl Grid.Row="1" x:Name="MediaTabs" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
+			<TabControl.Resources>
+				<Style TargetType="TabItem">
+					<Setter Property="Background" Value="{DynamicResource CardBackgroundColor}"/>
+
+					<Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+
+
+					<Style.Triggers>
+					
+						<Trigger Property="IsSelected" Value="True">
+							<Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+							<Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+						</Trigger>
+					</Style.Triggers>
+				</Style>
+			</TabControl.Resources>
+
+
+			<TabItem Header="Series" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
                 <Grid Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="270" />
@@ -53,8 +75,8 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Margin="0,0,0,8">
-                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{DynamicResource PrimaryTextColor}" />
+                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -75,7 +97,7 @@
                         <ListBox ItemsSource="{Binding SeriesVisibleItems}" SelectedItem="{Binding SelectedSeriesItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  SelectionMode="Single"
-                                 Background="#FFF7F7F7">
+                                 Background="{DynamicResource BackgroundColor}">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel IsItemsHost="True" />
@@ -89,14 +111,14 @@
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Width="200" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="White" Padding="10">
+                                    <Border Width="200" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="{DynamicResource CardBackgroundColor}" Padding="10">
                                         <StackPanel>
-                                            <Border Height="140" CornerRadius="8" Background="#EFEFEF" ClipToBounds="True">
+                                            <Border Height="140" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
                                                 <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
                                             </Border>
-                                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Height="44" TextWrapping="Wrap" MaxLines="2" VerticalContentAlignment="Top" />
-                                            <TextBlock Text="{Binding ContainerPath, Converter={StaticResource PathLeafConverter}}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" Height="34" TextTrimming="CharacterEllipsis" ToolTip="{Binding ContainerPath}" />
-                                            <TextBlock Text="{Binding EpisodeCount, StringFormat=Episodes: {0}}" FontSize="11" Margin="0,4,0,0" />
+                                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,10,0,0" BorderThickness="0" Background="{DynamicResource CardBackgroundColor}" Height="44" TextWrapping="Wrap" MaxLines="2" VerticalContentAlignment="Top" Foreground="{DynamicResource PrimaryTextColor}" />
+                                            <TextBlock Text="{Binding ContainerPath, Converter={StaticResource PathLeafConverter}}" FontSize="11" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" Height="34" TextTrimming="CharacterEllipsis" ToolTip="{Binding ContainerPath}" />
+                                            <TextBlock Text="{Binding EpisodeCount, StringFormat=Episodes: {0}}" FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource SecondaryTextColor}" />
                                             <Grid Margin="0,8,0,0">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
@@ -122,15 +144,15 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="#FAFAFA">
+                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="260" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding SelectedSeriesItem.Title}" FontSize="18" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding SelectedSeriesItem.ContainerPath}" Foreground="Gray" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SelectedSeriesItem.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+                                    <TextBlock Text="{Binding SelectedSeriesItem.ContainerPath}" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" />
                                     <ListBox x:Name="SeriesEpisodeList"
                                              ItemsSource="{Binding SelectedSeriesEpisodeEntries}"
                                               Height="170"
@@ -145,13 +167,13 @@
                                                                 Margin="0,0,8,0">
                                                         <TextBlock Text="▶"
                                                                    FontSize="12"
-                                                                   Foreground="#FF2A6BBD"
+                                                                   Foreground="{DynamicResource AccentColor}"
                                                                    Opacity="{Binding MarkerOpacity}"
                                                                    VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding MarkerRank}"
                                                                    FontSize="10"
                                                                    FontWeight="SemiBold"
-                                                                   Foreground="#FF2A6BBD"
+                                                                   Foreground="{DynamicResource AccentColor}"
                                                                    Margin="3,0,0,0"
                                                                    VerticalAlignment="Center" />
                                                     </StackPanel>
@@ -191,7 +213,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Movies">
+			<TabItem Header="Movies" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
                 <Grid Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="270" />
@@ -205,8 +227,8 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Margin="0,0,0,8">
-                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{DynamicResource PrimaryTextColor}" />
+                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -227,7 +249,7 @@
                         <ListBox ItemsSource="{Binding MovieVisibleItems}" SelectedItem="{Binding SelectedMovieItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  SelectionMode="Single"
-                                 Background="#FFF7F7F7">
+                                 Background="{DynamicResource BackgroundColor}">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel IsItemsHost="True" />
@@ -241,13 +263,13 @@
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Width="200" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="White" Padding="10">
+                                    <Border Width="200" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="{DynamicResource CardBackgroundColor}" Padding="10">
                                         <StackPanel>
-                                            <Border Height="140" CornerRadius="8" Background="#EFEFEF" ClipToBounds="True">
+                                            <Border Height="140" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
                                                 <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
                                             </Border>
-                                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Height="44" TextWrapping="Wrap" MaxLines="2" VerticalContentAlignment="Top" />
-                                            <TextBlock Text="{Binding ContainerPath, Converter={StaticResource PathLeafConverter}}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" Height="34" TextTrimming="CharacterEllipsis" ToolTip="{Binding ContainerPath}" />
+                                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="0,10,0,0" BorderThickness="0" Background="{DynamicResource CardBackgroundColor}" Height="44" TextWrapping="Wrap" MaxLines="2" VerticalContentAlignment="Top" Foreground="{DynamicResource PrimaryTextColor}" />
+                                            <TextBlock Text="{Binding ContainerPath, Converter={StaticResource PathLeafConverter}}" FontSize="11" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" Height="34" TextTrimming="CharacterEllipsis" ToolTip="{Binding ContainerPath}" />
                                             <Button Content="Play" Style="{StaticResource TileButtonStyle}" IsEnabled="{Binding DataContext.CanStartPlayback, RelativeSource={RelativeSource AncestorType=Window}}" Click="PlayMovie_Click" />
                                         </StackPanel>
                                     </Border>
@@ -255,7 +277,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="#FAFAFA">
+                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -263,7 +285,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="{Binding SelectedMovieItem.Title}" FontSize="18" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding SelectedMovieItem.ContainerPath}" Foreground="Gray" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SelectedMovieItem.ContainerPath}" Foreground="{DynamicResource ForegroundColor}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
                                     <Button Content="Play Movie" Style="{StaticResource RootButtonStyle}" IsEnabled="{Binding CanStartPlayback}" Click="PlaySelectedMovie_Click" />
@@ -275,7 +297,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Settings">
+			<TabItem Header="Settings" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}"  >
                 <Grid Margin="24">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -284,12 +306,11 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="VLC executable" FontSize="18" FontWeight="SemiBold" />
-                    <TextBlock Grid.Row="1" Margin="0,8,0,12" Text="The app will try to detect VLC automatically. If it fails, browse to vlc.exe here." TextWrapping="Wrap" />
+                    <TextBlock Text="VLC executable" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+                    <TextBlock Grid.Row="1" Margin="0,8,0,12" Text="The app will try to detect VLC automatically. If it fails, browse to vlc.exe here." TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextColor}" />
 
 					<WrapPanel Grid.Row="2">
-						<TextBox Text="{Binding VlcExecutablePath, UpdateSourceTrigger=PropertyChanged}" MinWidth="720" Margin="0,0,12,0" />
-
+						<TextBox Text="{Binding VlcExecutablePath, UpdateSourceTrigger=PropertyChanged}" MinWidth="720" Margin="0,0,12,0" Foreground="{DynamicResource PrimaryTextColor}" Background="{DynamicResource CardBackgroundColor}" />
 						<StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Button Content="Browse..." Margin="0,0,8,0" Padding="10,4" Click="BrowseVlcPath_Click" />
                             <Button Content="Detect" Margin="0,0,8,0" Padding="10,4" Click="DetectVlcPath_Click" />
@@ -297,12 +318,12 @@
                         </StackPanel>
                     </WrapPanel>
 
-                    <TextBlock Grid.Row="3" Margin="0,16,0,0" Text="{Binding VlcPathStatus}" Foreground="Gray" TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="3" Margin="0,16,0,0" Text="{Binding VlcPathStatus}" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" />
                 </Grid>
             </TabItem>
         </TabControl>
 
-        <StatusBar Grid.Row="2" Margin="0,12,0,0">
+		<StatusBar Grid.Row="2" Margin="0,12,0,0" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
             <StatusBarItem Content="{Binding StatusText}" />
         </StatusBar>
     </Grid>
