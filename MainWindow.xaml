@@ -42,26 +42,13 @@
 			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource SecondaryTextColor}" />
         </DockPanel>
 
-		<TabControl Grid.Row="1" x:Name="MediaTabs" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
-			<TabControl.Resources>
-				<Style TargetType="TabItem">
-					<Setter Property="Background" Value="{DynamicResource CardBackgroundColor}"/>
-
-					<Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+		<TabControl Grid.Row="1" x:Name="MediaTabs" Background="{DynamicResource BackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
+	
 
 
-					<Style.Triggers>
-					
-						<Trigger Property="IsSelected" Value="True">
-							<Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
-							<Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
-						</Trigger>
-					</Style.Triggers>
-				</Style>
-			</TabControl.Resources>
 
-
-			<TabItem Header="Series" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
+			<TabItem Header="Series" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" >
+            
                 <Grid Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="270" />
