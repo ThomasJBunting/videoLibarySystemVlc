@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -550,6 +551,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private async void ResumeSameVideo_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is MediaItem item)
+        {
+            await ResumeSameVideoAsync(item);
+        }
+    }
+
     private async void PlaySelectedSeriesPlaylist_Click(object sender, RoutedEventArgs e)
     {
         if (SelectedSeriesItem is not null)
@@ -705,6 +714,197 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         await PlayItemAsync(item, null, resumePlaylist, resumePlaylist[0]);
+    }
+
+    private async Task ResumeSameVideoAsync(MediaItem item)
+    {
+        if (item.Kind != MediaKind.Series || item.PlaylistPaths.Count == 0)
+        {
+            return;
+        }
+
+        // Get the last played episode path from recent plays
+        var lastPlayedPath = appState.Playback.RecentSeriesPlays
+            .Where(x => string.Equals(x.SeriesItemId, item.Id, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(x => x.PlayedUtc)
+            .Select(x => x.EpisodePath)
+            .FirstOrDefault();
+
+        // Find the index of the last played episode (or start from beginning if never played)
+        var startIndex = 0;
+        if (!string.IsNullOrWhiteSpace(lastPlayedPath))
+        {
+            var lastIndex = item.PlaylistPaths.FindIndex(path => string.Equals(path, lastPlayedPath, StringComparison.OrdinalIgnoreCase));
+            if (lastIndex >= 0)
+            {
+                startIndex = lastIndex; // Start from the SAME episode (not next one)
+            }
+        }
+
+        // Create playlist from the current episode onwards
+        var resumePlaylist = item.PlaylistPaths.Skip(startIndex).ToList();
+        if (resumePlaylist.Count == 0)
+        {
+            return;
+        }
+
+        // Calculate time offset for the first episode only
+        var timeOffsetSeconds = 0;
+        if (string.Equals(appState.Playback.LastItemId, item.Id, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(appState.Playback.LastFilePath, resumePlaylist[0], StringComparison.OrdinalIgnoreCase) &&
+            appState.Playback.LastStartedUtc.HasValue)
+        {
+            // Estimate the current position based on elapsed time
+            var elapsed = DateTime.UtcNow - appState.Playback.LastStartedUtc.Value;
+            var estimatedCurrentSeconds = (int)elapsed.TotalSeconds;
+
+            // Start 60 seconds before the estimated position, but not before 0
+            timeOffsetSeconds = Math.Max(0, estimatedCurrentSeconds - 60);
+        }
+
+        // If we have a time offset, use XSPF playlist with per-track options
+        // This allows start-time ONLY on the first track, not subsequent ones
+        if (timeOffsetSeconds > 0)
+        {
+            await PlayWithXspfPlaylistAsync(item, resumePlaylist, timeOffsetSeconds);
+        }
+        else
+        {
+            // No time offset, use normal playlist
+            await PlayItemAsync(item, null, resumePlaylist, resumePlaylist[0]);
+        }
+    }
+
+    private async Task PlayWithXspfPlaylistAsync(MediaItem item, List<string> episodePaths, int startTimeSeconds)
+    {
+        // Create a temporary XSPF playlist file with start time only for the first track
+        var playlistPath = CreateXspfPlaylistWithStartTime(episodePaths, startTimeSeconds);
+
+        if (!EnsureVlcPathAvailable())
+        {
+            return;
+        }
+
+        CanStartPlayback = false;
+        sessionTrackCts?.Cancel();
+        sessionTrackCts?.Dispose();
+        sessionTrackCts = null;
+        trackedSeriesItemId = null;
+        currentSession?.Dispose();
+
+        var launchSucceeded = false;
+        try
+        {
+            var vlcPath = vlcLocator.Resolve();
+            if (string.IsNullOrWhiteSpace(vlcPath))
+            {
+                throw new InvalidOperationException("VLC could not be found. Use Settings to browse to vlc.exe.");
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = vlcPath,
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Minimized,
+                WorkingDirectory = Path.GetDirectoryName(vlcPath) ?? AppPaths.BaseFolder
+            };
+
+            startInfo.ArgumentList.Add("--no-one-instance");
+            startInfo.ArgumentList.Add("--play-and-exit");
+            startInfo.ArgumentList.Add("--no-video-title-show");
+            startInfo.ArgumentList.Add("--fullscreen");
+            startInfo.ArgumentList.Add("--extraintf=rc");
+            startInfo.ArgumentList.Add(playlistPath);
+
+            var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Unable to start VLC.");
+            currentSession = new VlcSession(process);
+
+            appState.Playback.LastItemId = item.Id;
+            appState.Playback.LastFilePath = episodePaths[0];
+            appState.Playback.LastStartedUtc = DateTime.UtcNow;
+            appState.Playback.LastKnownTimeSeconds = null;
+            UpdateRecentSeriesPlays(item, episodePaths[0]);
+            stateStore.Save(appState);
+            RefreshSelectedSeriesEpisodeEntries();
+
+            if (item.Kind == MediaKind.Series && currentSession is not null)
+            {
+                trackedSeriesItemId = item.Id;
+                sessionTrackCts = new CancellationTokenSource();
+                _ = TrackSeriesPlaybackFromVlcAsync(currentSession, item.Id, sessionTrackCts.Token);
+            }
+
+            StatusText = $"Playing {item.Title}";
+            launchSucceeded = true;
+            _ = ReleasePlaybackGuardAsync();
+
+            // Clean up the temporary playlist file after a delay
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(10000);
+                try
+                {
+                    if (File.Exists(playlistPath))
+                    {
+                        File.Delete(playlistPath);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            VlcPathStatus = "VLC could not be launched. Check the path in Settings.";
+            StatusText = "Playback failed.";
+        }
+        finally
+        {
+            if (!launchSucceeded)
+            {
+                CanStartPlayback = true;
+            }
+        }
+    }
+
+    private string CreateXspfPlaylistWithStartTime(List<string> episodePaths, int startTimeSeconds)
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), $"vlc_resume_{Guid.NewGuid():N}.xspf");
+
+        using var writer = new StreamWriter(tempPath, false, System.Text.Encoding.UTF8);
+        writer.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        writer.WriteLine("<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\" xmlns:vlc=\"http://www.videolan.org/vlc/playlist/ns/0/\">");
+        writer.WriteLine("  <title>Resume Playlist</title>");
+        writer.WriteLine("  <trackList>");
+
+        for (int i = 0; i < episodePaths.Count; i++)
+        {
+            var path = episodePaths[i];
+            var fileUri = new Uri(path).AbsoluteUri;
+            var fileName = Path.GetFileName(path);
+
+            writer.WriteLine("    <track>");
+            writer.WriteLine($"      <location>{System.Security.SecurityElement.Escape(fileUri)}</location>");
+            writer.WriteLine($"      <title>{System.Security.SecurityElement.Escape(fileName)}</title>");
+            writer.WriteLine($"      <extension application=\"http://www.videolan.org/vlc/playlist/0\">");
+            writer.WriteLine($"        <vlc:id>{i}</vlc:id>");
+
+            // Only add start-time option to the FIRST track
+            if (i == 0)
+            {
+                writer.WriteLine($"        <vlc:option>start-time={startTimeSeconds}</vlc:option>");
+            }
+
+            writer.WriteLine($"      </extension>");
+            writer.WriteLine("    </track>");
+        }
+
+        writer.WriteLine("  </trackList>");
+        writer.WriteLine("</playlist>");
+
+        return tempPath;
     }
 
     private bool EnsureVlcPathAvailable()

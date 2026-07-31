@@ -110,6 +110,7 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="34" />
+                                                    <ColumnDefinition Width="34" />
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.Column="0"
                                                         Content="Play Playlist"
@@ -124,6 +125,15 @@
                                                         ToolTip="Resume from next episode"
                                                         IsEnabled="{Binding CanStartPlayback}"
                                                         Click="ResumeSeriesPlaylist_Click" />
+                                                <Button Grid.Column="2"
+                                                        Content="⏱"
+                                                        Margin="6,0,0,0"
+                                                        Padding="0"
+                                                        FontWeight="SemiBold"
+                                                        FontSize="16"
+                                                        ToolTip="Resume same video from where you left off"
+                                                        IsEnabled="{Binding CanStartPlayback}"
+                                                        Click="ResumeSameVideo_Click" />
                                             </Grid>
                                         </StackPanel>
                                     </Border>
