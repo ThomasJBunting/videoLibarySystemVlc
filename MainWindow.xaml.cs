@@ -347,6 +347,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    public AppSettings Settings => appState.Settings;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private ContextMenuStrip BuildTrayMenu()
@@ -890,6 +892,38 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         stateStore.Save(appState);
         StatusText = "Late fee URL saved.";
+    }
+
+    private void CollectibleEffectsToggle_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = appState.Settings.CollectibleCardEffectsEnabled 
+            ? "Collectible card 3D tilt effects enabled." 
+            : "Collectible card 3D tilt effects disabled.";
+    }
+
+    private void CollectibleShimmerToggle_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = appState.Settings.CollectibleCardShimmerEnabled 
+            ? "Collectible card water shimmer effects enabled." 
+            : "Collectible card water shimmer effects disabled.";
+    }
+
+    private void VideoEffectsToggle_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = appState.Settings.VideoCardEffectsEnabled 
+            ? "Video card 3D tilt effects enabled." 
+            : "Video card 3D tilt effects disabled.";
+    }
+
+    private void VideoShimmerToggle_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = appState.Settings.VideoCardShimmerEnabled 
+            ? "Video card water shimmer effects enabled." 
+            : "Video card water shimmer effects disabled.";
     }
 
     private void RemoveSeriesRoot_Click(object sender, RoutedEventArgs e) => RemoveRoot(SeriesRoots, SelectedSeriesRoot);

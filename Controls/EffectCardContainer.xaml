@@ -1,0 +1,52 @@
+<UserControl x:Class="VideoLibrarySystemVlc.Controls.EffectCardContainer"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:behaviors="clr-namespace:VideoLibrarySystemVlc.Behaviors"
+			 x:Name="Root">
+	<Border x:Name="CardBorder" 
+			CornerRadius="{Binding CornerRadius, ElementName=Root}"
+			BorderBrush="{Binding BorderBrush, ElementName=Root}"
+			BorderThickness="{Binding BorderThickness, ElementName=Root}"
+			Background="{Binding Background, ElementName=Root}"
+			Padding="{Binding Padding, ElementName=Root}"
+			behaviors:Card3DEffectBehavior.IsEnabled="{Binding EnableTiltEffect, ElementName=Root}">
+
+		<!-- Multi-layer card structure for parallax depth -->
+		<Grid x:Name="ContentGrid">
+			<!-- Layer 0: Background (no offset) -->
+			<ContentPresenter x:Name="BackgroundLayer"
+							Content="{Binding BackgroundContent, ElementName=Root}"
+							Panel.ZIndex="0" />
+
+			<!-- Layer 1: Image with Water Shimmer Effect -->
+			<Border x:Name="ImageLayer"
+					Panel.ZIndex="1"
+					ClipToBounds="True">
+				<ContentPresenter x:Name="ImageContentPresenter"
+								Content="{Binding ImageContent, ElementName=Root}" />
+			</Border>
+
+			<!-- Layer 2: Rainbow Foil Overlay (for rare cards) -->
+			<Border x:Name="FoilLayer"
+					Panel.ZIndex="2"
+					Opacity="0"
+					IsHitTestVisible="False">
+				<Border.Background>
+					<LinearGradientBrush x:Name="RainbowBrush" StartPoint="0,0" EndPoint="1,1">
+						<GradientStop Color="#FF0000" Offset="0.0"/>
+						<GradientStop Color="#FFFF00" Offset="0.2"/>
+						<GradientStop Color="#00FF00" Offset="0.4"/>
+						<GradientStop Color="#00FFFF" Offset="0.6"/>
+						<GradientStop Color="#0000FF" Offset="0.8"/>
+						<GradientStop Color="#FF00FF" Offset="1.0"/>
+					</LinearGradientBrush>
+				</Border.Background>
+			</Border>
+
+			<!-- Layer 3: Foreground Content (Text, Buttons, Badges) -->
+			<ContentPresenter x:Name="ForegroundLayer"
+							Content="{Binding ForegroundContent, ElementName=Root}"
+							Panel.ZIndex="3" />
+		</Grid>
+	</Border>
+</UserControl>
