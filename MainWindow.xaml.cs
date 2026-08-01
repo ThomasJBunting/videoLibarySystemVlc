@@ -926,6 +926,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             : "Video card water shimmer effects disabled.";
     }
 
+    private void CollectibleHoloFoilToggle_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = appState.Settings.CollectibleCardHoloFoilEnabled 
+            ? "Collectible card holographic foil edge effects enabled." 
+            : "Collectible card holographic foil edge effects disabled.";
+    }
+
+    private void VideoHoloFoilToggle_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = appState.Settings.VideoCardHoloFoilEnabled 
+            ? "Video card holographic foil edge effects enabled." 
+            : "Video card holographic foil edge effects disabled.";
+    }
+
     private void RemoveSeriesRoot_Click(object sender, RoutedEventArgs e) => RemoveRoot(SeriesRoots, SelectedSeriesRoot);
     private void RemoveMovieRoot_Click(object sender, RoutedEventArgs e) => RemoveRoot(MovieRoots, SelectedMovieRoot);
 

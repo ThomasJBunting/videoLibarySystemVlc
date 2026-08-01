@@ -14,6 +14,8 @@ public sealed class AppSettings
     // Card Effects settings
     public bool CollectibleCardEffectsEnabled { get; set; } = true;
     public bool CollectibleCardShimmerEnabled { get; set; } = true;
+    public bool CollectibleCardHoloFoilEnabled { get; set; } = false;
     public bool VideoCardEffectsEnabled { get; set; } = false;
     public bool VideoCardShimmerEnabled { get; set; } = false;
+    public bool VideoCardHoloFoilEnabled { get; set; } = false;
 }

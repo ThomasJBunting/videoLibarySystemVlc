@@ -112,23 +112,45 @@
                                         CornerRadius="12"
                                         EnableTiltEffect="{Binding DataContext.Settings.VideoCardEffectsEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
                                         EnableShimmerEffect="{Binding DataContext.Settings.VideoCardShimmerEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        EnableHoloFoilEffect="{Binding DataContext.Settings.VideoCardHoloFoilEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
                                         EnableFoilEffect="False">
+
+                                        <!-- Background Layer: Layout Structure -->
+                                        <controls:EffectCardContainer.BackgroundContent>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="140"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                            </Grid>
+                                        </controls:EffectCardContainer.BackgroundContent>
 
                                         <!-- Image Layer -->
                                         <controls:EffectCardContainer.ImageContent>
-                                            <Border Height="140" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
-                                                <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
-                                            </Border>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="140"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <Border Grid.Row="0" CornerRadius="8,8,0,0" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
+                                                    <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
+                                                </Border>
+                                            </Grid>
                                         </controls:EffectCardContainer.ImageContent>
 
                                         <!-- Foreground Layer (Text & Buttons) -->
                                         <controls:EffectCardContainer.ForegroundContent>
-                                            <StackPanel VerticalAlignment="Bottom">
-                                                <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" 
-                                                         FontWeight="SemiBold" 
-                                                         Margin="0,10,0,0" 
-                                                         BorderThickness="0" 
-                                                         Background="{DynamicResource CardBackgroundColor}" 
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="140"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Top" Margin="0,8,0,0">
+                                                 <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" 
+                                                          FontWeight="SemiBold" 
+                                                          Margin="0" 
+                                                          BorderThickness="0" 
+                                                          Background="{DynamicResource CardBackgroundColor}"
                                                          Height="44" 
                                                          TextWrapping="Wrap" 
                                                          MaxLines="2" 
@@ -173,8 +195,9 @@
                                                             ToolTip="Resume same video from where you left off"
                                                             IsEnabled="{Binding CanStartPlayback}"
                                                             Click="ResumeSameVideo_Click" />
-                                                </Grid>
+                                                 </Grid>
                                             </StackPanel>
+                                        </Grid>
                                         </controls:EffectCardContainer.ForegroundContent>
                                     </controls:EffectCardContainer>
                                 </DataTemplate>
@@ -310,18 +333,40 @@
                                         CornerRadius="12"
                                         EnableTiltEffect="{Binding DataContext.Settings.VideoCardEffectsEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
                                         EnableShimmerEffect="{Binding DataContext.Settings.VideoCardShimmerEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        EnableHoloFoilEffect="{Binding DataContext.Settings.VideoCardHoloFoilEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
                                         EnableFoilEffect="False">
+
+                                        <!-- Background Layer: Layout Structure -->
+                                        <controls:EffectCardContainer.BackgroundContent>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="140"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                            </Grid>
+                                        </controls:EffectCardContainer.BackgroundContent>
 
                                         <!-- Image Layer -->
                                         <controls:EffectCardContainer.ImageContent>
-                                            <Border Height="140" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
-                                                <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
-                                            </Border>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="140"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <Border Grid.Row="0" CornerRadius="8,8,0,0" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
+                                                    <Image Source="{Binding ArtworkPath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
+                                                </Border>
+                                            </Grid>
                                         </controls:EffectCardContainer.ImageContent>
 
                                         <!-- Foreground Layer (Text & Button) -->
                                         <controls:EffectCardContainer.ForegroundContent>
-                                            <StackPanel VerticalAlignment="Bottom">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="140"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Top" Margin="0,8,0,0">
                                                 <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" 
                                                          FontWeight="SemiBold" 
                                                          Margin="0,10,0,0" 
@@ -339,12 +384,13 @@
                                                            Height="34" 
                                                            TextTrimming="CharacterEllipsis" 
                                                            ToolTip="{Binding ContainerPath}" />
-                                                <Button Content="Play" 
-                                                        Style="{StaticResource TileButtonStyle}" 
-                                                        IsEnabled="{Binding DataContext.CanStartPlayback, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                        Click="PlayMovie_Click" />
-                                            </StackPanel>
-                                        </controls:EffectCardContainer.ForegroundContent>
+                                                         <Button Content="Play" 
+                                                                 Style="{StaticResource TileButtonStyle}" 
+                                                                 IsEnabled="{Binding DataContext.CanStartPlayback, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                 Click="PlayMovie_Click" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                </controls:EffectCardContainer.ForegroundContent>
                                     </controls:EffectCardContainer>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -470,9 +516,15 @@
 
 							<CheckBox Content="Enable Water Shimmer Effect on Collectible Cards" 
 									  IsChecked="{Binding Settings.CollectibleCardShimmerEnabled}" 
-									  Margin="0,0,0,16"
+									  Margin="0,0,0,8"
 									  Foreground="{DynamicResource PrimaryTextColor}"
 									  Click="CollectibleShimmerToggle_Click" />
+
+							<CheckBox Content="Enable Holographic Foil Edge Effect on Collectible Cards" 
+									  IsChecked="{Binding Settings.CollectibleCardHoloFoilEnabled}" 
+									  Margin="0,0,0,16"
+									  Foreground="{DynamicResource PrimaryTextColor}"
+									  Click="CollectibleHoloFoilToggle_Click" />
 
 							<!-- Video Card Effects -->
 							<TextBlock Text="Video Library Cards (Movies/Series)" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,8" />
@@ -489,8 +541,14 @@
 									  Foreground="{DynamicResource PrimaryTextColor}"
 									  Click="VideoShimmerToggle_Click" />
 
-							<TextBlock Text="💡 Effects are subtle and inspired by The Legend of Zelda: The Wind Waker. Cards tilt toward your cursor and shimmer with gentle waves." 
-									   FontSize="11" 
+							<CheckBox Content="Enable Holographic Foil Edge Effect on Video Cards" 
+									  IsChecked="{Binding Settings.VideoCardHoloFoilEnabled}" 
+									  Margin="0,0,0,8"
+									  Foreground="{DynamicResource PrimaryTextColor}"
+									  Click="VideoHoloFoilToggle_Click" />
+
+							<TextBlock Text="💡 Effects are subtle and inspired by gaming collectibles. Cards tilt toward your cursor, shimmer with gentle waves, and have holographic rainbow edges that shift with movement." 
+									   FontSize="11"
 									   Foreground="{DynamicResource SecondaryTextColor}" 
 									   TextWrapping="Wrap" 
 									   Margin="0,8,0,0" />
@@ -639,6 +697,7 @@
 											CornerRadius="12"
 											EnableTiltEffect="{Binding DataContext.Settings.CollectibleCardEffectsEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
 											EnableShimmerEffect="{Binding DataContext.Settings.CollectibleCardShimmerEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
+											EnableHoloFoilEffect="{Binding DataContext.Settings.CollectibleCardHoloFoilEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
 											EnableFoilEffect="False">
 
 											<!-- Image Layer -->
