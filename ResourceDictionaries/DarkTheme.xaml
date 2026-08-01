@@ -38,6 +38,15 @@
 							<Setter TargetName="Border" Property="Background" Value="#3A3A3A" />
 							<Setter Property="Foreground" Value="#FFFFFF" />
 						</Trigger>
+						<!-- MultiTrigger for IsSelected AND IsMouseOver -->
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="IsSelected" Value="True" />
+								<Condition Property="IsMouseOver" Value="True" />
+							</MultiTrigger.Conditions>
+							<Setter TargetName="Border" Property="Background" Value="#3D3D3D" />
+							<Setter Property="Foreground" Value="#FFFFFF" />
+						</MultiTrigger>
 					</ControlTemplate.Triggers>
 				</ControlTemplate>
 			</Setter.Value>
