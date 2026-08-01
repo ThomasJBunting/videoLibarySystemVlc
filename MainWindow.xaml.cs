@@ -14,63 +14,85 @@ namespace VideoLibrarySystemVlc;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    private readonly JsonStateStore stateStore = new();
-    private readonly MediaScanner mediaScanner = new();
-    private readonly ArtworkResolver artworkResolver = new();
-    private readonly VlcLocator vlcLocator;
-    private readonly VlcLauncher vlcLauncher;
-    private readonly AppState appState;
-    private readonly System.Drawing.Icon trayIconImage;
-    private readonly NotifyIcon trayIcon;
-    private bool exitRequested;
-    private VlcSession? currentSession;
-    private CancellationTokenSource? sessionTrackCts;
-    private string? trackedSeriesItemId;
-    private bool canStartPlayback = true;
+	private readonly JsonStateStore stateStore = new();
+	private readonly MediaScanner mediaScanner = new();
+	private readonly ArtworkResolver artworkResolver = new();
+	private readonly VlcLocator vlcLocator;
+	private readonly VlcLauncher vlcLauncher;
+	private readonly AppState appState;
+	private readonly System.Drawing.Icon trayIconImage;
+	private readonly NotifyIcon trayIcon;
 
-    private ObservableCollection<LibraryRoot> seriesRoots = [];
-    private ObservableCollection<LibraryRoot> movieRoots = [];
-    private ObservableCollection<LibraryRoot> seriesRootOptions = [];
-    private ObservableCollection<LibraryRoot> movieRootOptions = [];
-    private ObservableCollection<MediaItem> seriesItems = [];
-    private ObservableCollection<MediaItem> movieItems = [];
-    private ObservableCollection<MediaItem> seriesVisibleItems = [];
-    private ObservableCollection<MediaItem> movieVisibleItems = [];
-    private ObservableCollection<EpisodeDisplayEntry> selectedSeriesEpisodeEntries = [];
-    private LibraryRoot? selectedSeriesRoot;
-    private LibraryRoot? selectedMovieRoot;
-    private MediaItem? selectedSeriesItem;
-    private MediaItem? selectedMovieItem;
-    private string statusText = "Ready.";
-    private string vlcExecutablePath = string.Empty;
-    private string vlcPathStatus = string.Empty;
+	// Back Rooms services and state
+	private readonly CollectiblesStore collectiblesStore = new();
+	private readonly BackRoomsService backRoomsService;
+	private readonly TickerTapeService tickerTapeService = new();
+	private BackRoomsState backRoomsState;
+	private System.Windows.Threading.DispatcherTimer? gemTimer;
+	private System.Windows.Media.Animation.Storyboard? tickerStoryboard;
+	private List<CollectibleDefinition> availableCollectibles = [];
+
+	private bool exitRequested;
+	private VlcSession? currentSession;
+	private CancellationTokenSource? sessionTrackCts;
+	private string? trackedSeriesItemId;
+	private bool canStartPlayback = true;
+
+	private ObservableCollection<LibraryRoot> seriesRoots = [];
+	private ObservableCollection<LibraryRoot> movieRoots = [];
+	private ObservableCollection<LibraryRoot> seriesRootOptions = [];
+	private ObservableCollection<LibraryRoot> movieRootOptions = [];
+	private ObservableCollection<MediaItem> seriesItems = [];
+	private ObservableCollection<MediaItem> movieItems = [];
+	private ObservableCollection<MediaItem> seriesVisibleItems = [];
+	private ObservableCollection<MediaItem> movieVisibleItems = [];
+	private ObservableCollection<EpisodeDisplayEntry> selectedSeriesEpisodeEntries = [];
+	private LibraryRoot? selectedSeriesRoot;
+	private LibraryRoot? selectedMovieRoot;
+	private MediaItem? selectedSeriesItem;
+	private MediaItem? selectedMovieItem;
+	private string statusText = "Ready.";
+	private string vlcExecutablePath = string.Empty;
+	private string vlcPathStatus = string.Empty;
 	private bool isDarkMode = false;
+
+	// Back Rooms properties
+	private ObservableCollection<Collectible> backRoomsCollectibles = [];
+	private Collectible? selectedCollectible;
+	private int backRoomsGems = 0;
+	private string tickerTapeText = string.Empty;
+	private bool tickerTapeVisible = true;
 	public MainWindow()
-    {
-        InitializeComponent();
-        Icon = IconFactory.CreateWindowIcon();
+	{
+		InitializeComponent();
+		Icon = IconFactory.CreateWindowIcon();
 
-        appState = stateStore.LoadOrCreate();
-        vlcLocator = new VlcLocator(appState.Settings.VlcExecutablePath);
-        vlcLauncher = new VlcLauncher(vlcLocator);
-        trayIconImage = IconFactory.CreateTrayIcon();
+		appState = stateStore.LoadOrCreate();
+		vlcLocator = new VlcLocator(appState.Settings.VlcExecutablePath);
+		vlcLauncher = new VlcLauncher(vlcLocator);
+		trayIconImage = IconFactory.CreateTrayIcon();
 
-        DataContext = this;
-        LoadStateToUi();
-        AutoConfigureVlcPath();
+		// Initialize Back Rooms
+		backRoomsState = collectiblesStore.LoadOrCreate();
+		backRoomsService = new BackRoomsService(collectiblesStore);
 
-        trayIcon = new NotifyIcon
-        {
-            Icon = trayIconImage,
-            Visible = true,
-            Text = "Video Library System VLC",
-            ContextMenuStrip = BuildTrayMenu()
-        };
-        trayIcon.DoubleClick += (_, _) => ShowFromTray();
+		DataContext = this;
+		LoadStateToUi();
+		AutoConfigureVlcPath();
+		InitializeBackRooms();
 
-        Loaded += async (_, _) => await RefreshAllAsync();
-        Closing += OnClosing;
-    }
+		trayIcon = new NotifyIcon
+		{
+			Icon = trayIconImage,
+			Visible = true,
+			Text = "Video Library System VLC",
+			ContextMenuStrip = BuildTrayMenu()
+		};
+		trayIcon.DoubleClick += (_, _) => ShowFromTray();
+
+		Loaded += async (_, _) => await RefreshAllAsync();
+		Closing += OnClosing;
+	}
 	private void ToggleDarkMode_Click(object sender, RoutedEventArgs e)
 	{
 		var appResources = System.Windows.Application.Current.Resources.MergedDictionaries;
@@ -226,6 +248,105 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set => SetField(ref selectedSeriesEpisodeEntries, value);
     }
 
+    // Back Rooms properties
+    public ObservableCollection<Collectible> BackRoomsCollectibles
+    {
+        get => backRoomsCollectibles;
+        set => SetField(ref backRoomsCollectibles, value);
+    }
+
+    public Collectible? SelectedCollectible
+    {
+        get => selectedCollectible;
+        set => SetField(ref selectedCollectible, value);
+    }
+
+    public int BackRoomsGems
+    {
+        get => backRoomsGems;
+        set
+        {
+            if (SetField(ref backRoomsGems, value))
+            {
+                // Save to state when gems change
+                backRoomsState.Gems = value;
+                collectiblesStore.Save(backRoomsState);
+            }
+        }
+    }
+
+    public string TickerTapeText
+    {
+        get => tickerTapeText;
+        set
+        {
+            if (SetField(ref tickerTapeText, value))
+            {
+                // Restart animation when text changes
+                Dispatcher.BeginInvoke(new Action(StartTickerAnimation), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
+        }
+    }
+
+    public bool TickerTapeVisible
+    {
+        get => tickerTapeVisible;
+        set
+        {
+            if (SetField(ref tickerTapeVisible, value))
+            {
+                // Start/stop animation when visibility changes
+                if (value)
+                {
+                    Dispatcher.BeginInvoke(new Action(StartTickerAnimation), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+                else
+                {
+                    StopTickerAnimation();
+                }
+            }
+        }
+    }
+
+    public string? CollectiblesSourceUrl
+    {
+        get => appState.Settings.CollectiblesSourceUrl;
+        set
+        {
+            if (appState.Settings.CollectiblesSourceUrl != value)
+            {
+                appState.Settings.CollectiblesSourceUrl = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string? TickerReviewsUrl
+    {
+        get => appState.Settings.TickerReviewsUrl;
+        set
+        {
+            if (appState.Settings.TickerReviewsUrl != value)
+            {
+                appState.Settings.TickerReviewsUrl = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string? LateFeeUrl
+    {
+        get => appState.Settings.LateFeeUrl;
+        set
+        {
+            if (appState.Settings.LateFeeUrl != value)
+            {
+                appState.Settings.LateFeeUrl = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private ContextMenuStrip BuildTrayMenu()
@@ -338,6 +459,241 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         PersistVlcPath();
     }
 
+    private void InitializeBackRooms()
+    {
+        // Load state
+        BackRoomsGems = backRoomsState.Gems;
+        BackRoomsCollectibles = new ObservableCollection<Collectible>(backRoomsState.CollectedItems);
+        TickerTapeVisible = appState.Settings.TickerTapeEnabled;
+
+        // Set up gem timer (check every minute)
+        gemTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(1)
+        };
+        gemTimer.Tick += GemTimer_Tick;
+        gemTimer.Start();
+
+        // Check for gem award immediately
+        CheckAndAwardGem();
+
+        // Set up ticker tape animation
+        StartTickerAnimation();
+
+        // Load collectibles and reviews asynchronously
+        _ = LoadBackRoomsDataAsync();
+    }
+
+    private void GemTimer_Tick(object? sender, EventArgs e)
+    {
+        CheckAndAwardGem();
+    }
+
+    private void CheckAndAwardGem()
+    {
+        if (backRoomsService.TryAwardDailyGem(backRoomsState))
+        {
+            BackRoomsGems = backRoomsState.Gems;
+            StatusText = "You earned a gem! 💎";
+        }
+
+        // Update next gem timer display
+        var timeUntilNext = backRoomsService.GetTimeUntilNextGem(backRoomsState);
+        if (NextGemTimerText != null)
+        {
+            NextGemTimerText.Text = $"Next gem in: {timeUntilNext.Hours:D2}:{timeUntilNext.Minutes:D2}:{timeUntilNext.Seconds:D2}";
+        }
+    }
+
+    private void StartTickerAnimation()
+    {
+        if (TickerTextBlock == null || TickerCanvas == null || !TickerTapeVisible)
+        {
+            return;
+        }
+
+        // Stop any existing animation
+        StopTickerAnimation();
+
+        // Measure the text to calculate animation distance
+        TickerTextBlock.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+        var textWidth = TickerTextBlock.DesiredSize.Width;
+        var canvasWidth = TickerCanvas.ActualWidth;
+
+        if (canvasWidth <= 0 || textWidth <= 0)
+        {
+            return;
+        }
+
+        // Get the storyboard from resources
+        tickerStoryboard = TickerTextBlock.Resources["TickerAnimation"] as System.Windows.Media.Animation.Storyboard;
+        if (tickerStoryboard == null)
+        {
+            return;
+        }
+
+        // Configure animation: start from right edge, scroll past left edge
+        var animation = tickerStoryboard.Children[0] as System.Windows.Media.Animation.DoubleAnimation;
+        if (animation != null)
+        {
+            animation.From = canvasWidth;
+            animation.To = -textWidth;
+
+            // Calculate duration: ~60 pixels per second for smooth scrolling
+            var totalDistance = canvasWidth + textWidth;
+            var duration = TimeSpan.FromSeconds(totalDistance / 60.0);
+            animation.Duration = new System.Windows.Duration(duration);
+        }
+
+        // Start the animation
+        tickerStoryboard.Begin();
+    }
+
+    private void StopTickerAnimation()
+    {
+        tickerStoryboard?.Stop();
+    }
+
+    private async Task LoadBackRoomsDataAsync()
+    {
+        try
+        {
+            // Load collectibles definitions
+            var collectiblesUrl = appState.Settings.CollectiblesSourceUrl;
+            if (!string.IsNullOrEmpty(collectiblesUrl))
+            {
+                availableCollectibles = await backRoomsService.LoadCollectibleDefinitionsAsync(collectiblesUrl);
+                if (AvailableCollectiblesText != null)
+                {
+                    AvailableCollectiblesText.Text = availableCollectibles.Count > 0
+                        ? $"{availableCollectibles.Count} collectibles available to win!"
+                        : "No collectibles configured. Set the URL in settings.";
+                }
+            }
+
+            // Load ticker tape reviews
+            var tickerUrl = appState.Settings.TickerReviewsUrl;
+            if (!string.IsNullOrEmpty(tickerUrl))
+            {
+                var reviews = await tickerTapeService.LoadReviewsAsync(tickerUrl);
+                TickerTapeText = tickerTapeService.FormatReviewsForDisplay(reviews);
+            }
+            else
+            {
+                TickerTapeText = "Welcome to the Video Rental Desk! Set up ticker tape reviews in settings.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error loading Back Rooms data: {ex.Message}";
+        }
+    }
+
+    private async void OpenLootCrate_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Debug: Show current state
+            StatusText = $"Gems: {BackRoomsGems}, Collectibles loaded: {availableCollectibles.Count}";
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Opening loot crate. Gems: {BackRoomsGems}, Collectibles: {availableCollectibles.Count}");
+
+            if (BackRoomsGems < 1)
+            {
+                System.Windows.MessageBox.Show("You need at least 1 gem to open a loot crate!", "Not Enough Gems", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (availableCollectibles.Count == 0)
+            {
+                var msg = "No collectibles are configured. Check your settings.\n\n";
+                msg += $"Collectibles URL: {appState.Settings.CollectiblesSourceUrl ?? "(not set)"}\n";
+                msg += "Make sure you've saved the URL in Settings and it points to a valid JSON file.";
+                System.Windows.MessageBox.Show(msg, "No Collectibles", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            StatusText = "Opening loot crate...";
+            var wonCollectible = await backRoomsService.OpenLootCrateAsync(backRoomsState, availableCollectibles);
+
+            if (wonCollectible != null)
+            {
+                BackRoomsGems = backRoomsState.Gems;
+                BackRoomsCollectibles.Add(wonCollectible);
+                SelectedCollectible = wonCollectible;
+
+                System.Windows.MessageBox.Show($"Congratulations! You won:\n\n{wonCollectible.Name}\n\n{wonCollectible.Description}", 
+                    "Loot Crate Opened!", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                StatusText = $"Opened loot crate and won: {wonCollectible.Name}";
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Successfully won: {wonCollectible.Name}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[MainWindow] OpenLootCrateAsync returned null");
+                System.Windows.MessageBox.Show("Failed to open loot crate. Check the Output window for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                StatusText = "Failed to open loot crate.";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Exception in OpenLootCrate_Click: {ex.Message}\n{ex.StackTrace}");
+            System.Windows.MessageBox.Show($"Error opening loot crate: {ex.Message}\n\nCheck the Output window for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            StatusText = $"Error: {ex.Message}";
+        }
+    }
+
+    private void PayLateFee_Click(object sender, RoutedEventArgs e)
+    {
+        var url = appState.Settings.LateFeeUrl ?? "https://www.google.com";
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+            StatusText = "Redirected to pay late fee...";
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Failed to open URL: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void BackRoomsSectionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (BackRoomsSectionList == null || CollectiblesSection == null || LootCrateInfoSection == null)
+        {
+            return;
+        }
+
+        var selectedIndex = BackRoomsSectionList.SelectedIndex;
+
+        CollectiblesSection.Visibility = selectedIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
+        LootCrateInfoSection.Visibility = selectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void GemCountTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Parse gem count from text box (supports manual editing)
+        if (int.TryParse(GemCountTextBox.Text, out var gemCount))
+        {
+            BackRoomsGems = Math.Max(0, gemCount);
+        }
+        else
+        {
+            // Reset to current value if invalid
+            GemCountTextBox.Text = BackRoomsGems.ToString();
+        }
+    }
+
+    private async void ReloadBackRoomsData_Click(object sender, RoutedEventArgs e)
+    {
+        StatusText = "Reloading Back Rooms data...";
+        await LoadBackRoomsDataAsync();
+        StatusText = $"Reloaded! {availableCollectibles.Count} collectibles available.";
+    }
+
     private async Task RefreshAllAsync()
     {
         await RefreshSeriesAsync();
@@ -393,6 +749,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             trayIcon.Dispose();
             trayIconImage.Dispose();
             currentSession?.Dispose();
+            gemTimer?.Stop();
+            StopTickerAnimation();
             PersistState();
             return;
         }
@@ -485,6 +843,53 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         VlcPathStatus = string.IsNullOrWhiteSpace(appState.Settings.VlcExecutablePath)
             ? "VLC path cleared."
             : $"Saved VLC path: {appState.Settings.VlcExecutablePath}";
+    }
+
+    private void TickerTapeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        appState.Settings.TickerTapeEnabled = TickerTapeVisible;
+        stateStore.Save(appState);
+        StatusText = TickerTapeVisible ? "Ticker tape enabled." : "Ticker tape disabled.";
+    }
+
+    private async void SaveCollectiblesUrl_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = "Collectibles URL saved.";
+
+        // Reload collectibles
+        if (!string.IsNullOrEmpty(CollectiblesSourceUrl))
+        {
+            availableCollectibles = await backRoomsService.LoadCollectibleDefinitionsAsync(CollectiblesSourceUrl);
+            if (AvailableCollectiblesText != null)
+            {
+                AvailableCollectiblesText.Text = availableCollectibles.Count > 0
+                    ? $"{availableCollectibles.Count} collectibles available to win!"
+                    : "No collectibles found at URL.";
+            }
+            StatusText = $"Loaded {availableCollectibles.Count} collectibles.";
+        }
+    }
+
+    private async void SaveTickerReviewsUrl_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = "Ticker reviews URL saved.";
+
+        // Reload reviews
+        if (!string.IsNullOrEmpty(TickerReviewsUrl))
+        {
+            var reviews = await tickerTapeService.LoadReviewsAsync(TickerReviewsUrl);
+            TickerTapeText = tickerTapeService.FormatReviewsForDisplay(reviews);
+
+            StatusText = $"Loaded {reviews.Count} reviews.";
+        }
+    }
+
+    private void SaveLateFeeUrl_Click(object sender, RoutedEventArgs e)
+    {
+        stateStore.Save(appState);
+        StatusText = "Late fee URL saved.";
     }
 
     private void RemoveSeriesRoot_Click(object sender, RoutedEventArgs e) => RemoveRoot(SeriesRoots, SelectedSeriesRoot);
@@ -660,11 +1065,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             UpdateRecentSeriesPlays(item, playedFilePath);
             stateStore.Save(appState);
             RefreshSelectedSeriesEpisodeEntries();
-            if (item.Kind == MediaKind.Series && currentSession is not null)
+            if (currentSession is not null)
             {
-                trackedSeriesItemId = item.Id;
                 sessionTrackCts = new CancellationTokenSource();
-                _ = TrackSeriesPlaybackFromVlcAsync(currentSession, item.Id, sessionTrackCts.Token);
+                if (item.Kind == MediaKind.Series)
+                {
+                    trackedSeriesItemId = item.Id;
+                    _ = TrackSeriesPlaybackFromVlcAsync(currentSession, item.Id, sessionTrackCts.Token);
+                }
+                else
+                {
+                    _ = TrackMoviePlaybackFromVlcAsync(currentSession, item.Id, sessionTrackCts.Token);
+                }
             }
             StatusText = $"Playing {item.Title}";
             launchSucceeded = true;
@@ -751,15 +1163,23 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         // Calculate time offset for the first episode only
         var timeOffsetSeconds = 0;
         if (string.Equals(appState.Playback.LastItemId, item.Id, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(appState.Playback.LastFilePath, resumePlaylist[0], StringComparison.OrdinalIgnoreCase) &&
-            appState.Playback.LastStartedUtc.HasValue)
+            string.Equals(appState.Playback.LastFilePath, resumePlaylist[0], StringComparison.OrdinalIgnoreCase))
         {
-            // Estimate the current position based on elapsed time
-            var elapsed = DateTime.UtcNow - appState.Playback.LastStartedUtc.Value;
-            var estimatedCurrentSeconds = (int)elapsed.TotalSeconds;
+            // Use the actual tracked position if available, otherwise estimate
+            if (appState.Playback.LastKnownTimeSeconds.HasValue && appState.Playback.LastKnownTimeSeconds.Value > 0)
+            {
+                // Use real tracked position - 60 seconds
+                timeOffsetSeconds = Math.Max(0, appState.Playback.LastKnownTimeSeconds.Value - 60);
+            }
+            else if (appState.Playback.LastStartedUtc.HasValue)
+            {
+                // Fallback: Estimate the current position based on elapsed time
+                var elapsed = DateTime.UtcNow - appState.Playback.LastStartedUtc.Value;
+                var estimatedCurrentSeconds = (int)elapsed.TotalSeconds;
 
-            // Start 60 seconds before the estimated position, but not before 0
-            timeOffsetSeconds = Math.Max(0, estimatedCurrentSeconds - 60);
+                // Start 60 seconds before the estimated position, but not before 0
+                timeOffsetSeconds = Math.Max(0, estimatedCurrentSeconds - 60);
+            }
         }
 
         // If we have a time offset, use XSPF playlist with per-track options
@@ -801,6 +1221,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 throw new InvalidOperationException("VLC could not be found. Use Settings to browse to vlc.exe.");
             }
 
+            // Use a random port for RC interface
+            var rcPort = Random.Shared.Next(50000, 50100);
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = vlcPath,
@@ -814,10 +1237,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             startInfo.ArgumentList.Add("--no-video-title-show");
             startInfo.ArgumentList.Add("--fullscreen");
             startInfo.ArgumentList.Add("--extraintf=rc");
+            startInfo.ArgumentList.Add($"--rc-host=localhost:{rcPort}");
             startInfo.ArgumentList.Add(playlistPath);
 
             var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Unable to start VLC.");
-            currentSession = new VlcSession(process);
+            currentSession = new VlcSession(process, rcPort);
 
             appState.Playback.LastItemId = item.Id;
             appState.Playback.LastFilePath = episodePaths[0];
@@ -970,6 +1394,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         return true;
     }
 
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
     private string ResolvePlayedPath(MediaItem item, string? explicitEpisodePath)
     {
         if (!string.IsNullOrWhiteSpace(explicitEpisodePath))
@@ -987,6 +1416,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private async Task TrackSeriesPlaybackFromVlcAsync(VlcSession session, string seriesItemId, CancellationToken cancellationToken)
     {
+        VlcRcClient? rcClient = null;
+        var rcConnectionAttempted = false;
+        var lastPositionPollTicks = 0L;
+        const long pollIntervalTicks = 10 * TimeSpan.TicksPerSecond; // 30 seconds
+
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -996,6 +1430,32 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             catch (OperationCanceledException)
             {
                 break;
+            }
+
+            // Try to connect to RC interface once
+            if (!rcConnectionAttempted)
+            {
+                rcConnectionAttempted = true;
+                rcClient = await session.GetRcClientAsync(cancellationToken);
+            }
+
+            // Poll VLC for current playback position every 30 seconds
+            if (rcClient is not null && DateTime.UtcNow.Ticks - lastPositionPollTicks >= pollIntervalTicks)
+            {
+                lastPositionPollTicks = DateTime.UtcNow.Ticks;
+                var currentSeconds = await rcClient.GetCurrentTimeSecondsAsync(cancellationToken);
+
+                if (currentSeconds.HasValue && currentSeconds.Value > 0)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        if (string.Equals(appState.Playback.LastItemId, seriesItemId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            appState.Playback.LastKnownTimeSeconds = currentSeconds.Value;
+                            stateStore.Save(appState);
+                        }
+                    });
+                }
             }
 
             if (!session.TryGetWindowTitle(out var title))
@@ -1042,6 +1502,52 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     RefreshSelectedSeriesEpisodeEntries();
                 }
             });
+        }
+    }
+
+    private async Task TrackMoviePlaybackFromVlcAsync(VlcSession session, string itemId, CancellationToken cancellationToken)
+    {
+        VlcRcClient? rcClient = null;
+        var rcConnectionAttempted = false;
+        var lastPositionPollTicks = 0L;
+        const long pollIntervalTicks = 30 * TimeSpan.TicksPerSecond; // 30 seconds
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(1200, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
+            // Try to connect to RC interface once
+            if (!rcConnectionAttempted)
+            {
+                rcConnectionAttempted = true;
+                rcClient = await session.GetRcClientAsync(cancellationToken);
+            }
+
+            // Poll VLC for current playback position every 30 seconds
+            if (rcClient is not null && DateTime.UtcNow.Ticks - lastPositionPollTicks >= pollIntervalTicks)
+            {
+                lastPositionPollTicks = DateTime.UtcNow.Ticks;
+                var currentSeconds = await rcClient.GetCurrentTimeSecondsAsync(cancellationToken);
+
+                if (currentSeconds.HasValue && currentSeconds.Value > 0)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        if (string.Equals(appState.Playback.LastItemId, itemId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            appState.Playback.LastKnownTimeSeconds = currentSeconds.Value;
+                            stateStore.Save(appState);
+                        }
+                    });
+                }
+            }
         }
     }
 

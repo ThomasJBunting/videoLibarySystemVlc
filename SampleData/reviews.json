@@ -1,0 +1,74 @@
+[
+  {
+	"name": "Mike",
+	"reviewText": "Best rental shop ever!",
+	"submittedDateUtc": "2024-01-15T10:30:00Z",
+	"mediaTitle": "The Matrix"
+  },
+  {
+	"name": "Sarah",
+	"reviewText": "Five stars would rent again",
+	"submittedDateUtc": "2024-01-14T15:45:00Z",
+	"mediaTitle": "Blade Runner"
+  },
+  {
+	"name": "Tom",
+	"reviewText": "Late fee worth it tbh",
+	"submittedDateUtc": "2024-01-13T20:15:00Z",
+	"mediaTitle": "Inception"
+  },
+  {
+	"name": "Jessica",
+	"reviewText": "Gem system is brilliant chaos",
+	"submittedDateUtc": "2024-01-12T09:00:00Z",
+	"mediaTitle": null
+  },
+  {
+	"name": "Alex",
+	"reviewText": "Blockbuster could never compete",
+	"submittedDateUtc": "2024-01-11T18:30:00Z",
+	"mediaTitle": "Pulp Fiction"
+  },
+  {
+	"name": "Emma",
+	"reviewText": "Collectibles are actually addicting help",
+	"submittedDateUtc": "2024-01-10T12:20:00Z",
+	"mediaTitle": null
+  },
+  {
+	"name": "David",
+	"reviewText": "VHS nostalgia hits different here",
+	"submittedDateUtc": "2024-01-09T16:40:00Z",
+	"mediaTitle": "The Terminator"
+  },
+  {
+	"name": "Rachel",
+	"reviewText": "Just paid my late fee",
+	"submittedDateUtc": "2024-01-08T11:10:00Z",
+	"mediaTitle": "Fight Club"
+  },
+  {
+	"name": "Chris",
+	"reviewText": "Loot crate system is genius",
+	"submittedDateUtc": "2024-01-07T14:55:00Z",
+	"mediaTitle": null
+  },
+  {
+	"name": "Linda",
+	"reviewText": "This beats Netflix any day",
+	"submittedDateUtc": "2024-01-06T08:25:00Z",
+	"mediaTitle": "The Shawshank Redemption"
+  },
+  {
+	"name": "Kevin",
+	"reviewText": "Got the golden ticket woohoo",
+	"submittedDateUtc": "2024-01-05T19:50:00Z",
+	"mediaTitle": null
+  },
+  {
+	"name": "Olivia",
+	"reviewText": "Back rooms vibe is immaculate",
+	"submittedDateUtc": "2024-01-04T13:35:00Z",
+	"mediaTitle": "Interstellar"
+  }
+]

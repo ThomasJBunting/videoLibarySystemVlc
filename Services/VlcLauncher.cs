@@ -27,6 +27,9 @@ public sealed class VlcLauncher
             throw new InvalidOperationException("VLC could not be found. Use Settings to browse to vlc.exe.");
         }
 
+        // Use a random port for RC interface (50000-50100 range)
+        var rcPort = Random.Shared.Next(50000, 50100);
+
         var startInfo = new ProcessStartInfo
         {
             FileName = vlcPath,
@@ -40,6 +43,7 @@ public sealed class VlcLauncher
         startInfo.ArgumentList.Add("--no-video-title-show");
         startInfo.ArgumentList.Add("--fullscreen");
         startInfo.ArgumentList.Add("--extraintf=rc");
+        startInfo.ArgumentList.Add($"--rc-host=localhost:{rcPort}");
         if (playback.LastItemId == item.Id && playback.LastKnownTimeSeconds is > 0)
         {
             startInfo.ArgumentList.Add($"--start-time={playback.LastKnownTimeSeconds.Value}");
@@ -65,25 +69,50 @@ public sealed class VlcLauncher
         }
 
         var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Unable to start VLC.");
-        return Task.FromResult(new VlcSession(process));
+        return Task.FromResult(new VlcSession(process, rcPort));
     }
 }
 
 public sealed class VlcSession : IDisposable
 {
     private readonly Process process;
+    private readonly int rcPort;
+    private VlcRcClient? rcClient;
 
-    public VlcSession(Process process)
+    public VlcSession(Process process, int rcPort)
     {
         this.process = process;
+        this.rcPort = rcPort;
     }
 
     public void Dispose()
     {
+        rcClient?.Dispose();
         if (!process.HasExited)
         {
             process.CloseMainWindow();
         }
+    }
+
+    public async Task<VlcRcClient?> GetRcClientAsync(CancellationToken cancellationToken = default)
+    {
+        if (rcClient is not null)
+        {
+            return rcClient.IsConnected ? rcClient : null;
+        }
+
+        if (process.HasExited)
+        {
+            return null;
+        }
+
+        // Give VLC a moment to start the RC interface
+        await Task.Delay(1500, cancellationToken);
+
+        rcClient = new VlcRcClient("localhost", rcPort);
+        var connected = await rcClient.ConnectAsync(5000, cancellationToken);
+
+        return connected ? rcClient : null;
     }
 
     public bool TryGetWindowTitle(out string title)

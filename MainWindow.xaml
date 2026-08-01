@@ -11,6 +11,8 @@
     <Window.Resources>
         <conv:PathLeafConverter x:Key="PathLeafConverter" />
         <conv:ImagePathConverter x:Key="ImagePathConverter" />
+        <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <Style TargetType="ListBox">
             <Setter Property="BorderThickness" Value="0" />
@@ -33,6 +35,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -295,32 +298,358 @@
             </TabItem>
 
 			<TabItem Header="Settings" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}"  >
-                <Grid Margin="24">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+				<Grid Margin="24">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
 
-                    <TextBlock Text="VLC executable" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
-                    <TextBlock Grid.Row="1" Margin="0,8,0,12" Text="The app will try to detect VLC automatically. If it fails, browse to vlc.exe here." TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextColor}" />
+					<TextBlock Text="VLC executable" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+					<TextBlock Grid.Row="1" Margin="0,8,0,12" Text="The app will try to detect VLC automatically. If it fails, browse to vlc.exe here." TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextColor}" />
 
 					<WrapPanel Grid.Row="2">
 						<TextBox Text="{Binding VlcExecutablePath, UpdateSourceTrigger=PropertyChanged}" MinWidth="720" Margin="0,0,12,0" Foreground="{DynamicResource PrimaryTextColor}" Background="{DynamicResource CardBackgroundColor}" />
 						<StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Button Content="Browse..." Margin="0,0,8,0" Padding="10,4" Click="BrowseVlcPath_Click" />
-                            <Button Content="Detect" Margin="0,0,8,0" Padding="10,4" Click="DetectVlcPath_Click" />
-                            <Button Content="Save" Padding="10,4" Click="SaveVlcPath_Click" />
-                        </StackPanel>
-                    </WrapPanel>
+							<Button Content="Browse..." Margin="0,0,8,0" Padding="10,4" Click="BrowseVlcPath_Click" />
+							<Button Content="Detect" Margin="0,0,8,0" Padding="10,4" Click="DetectVlcPath_Click" />
+							<Button Content="Save" Padding="10,4" Click="SaveVlcPath_Click" />
+						</StackPanel>
+					</WrapPanel>
 
-                    <TextBlock Grid.Row="3" Margin="0,16,0,0" Text="{Binding VlcPathStatus}" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" />
-                </Grid>
-            </TabItem>
-        </TabControl>
+					<TextBlock Grid.Row="3" Margin="0,16,0,0" Text="{Binding VlcPathStatus}" Foreground="{DynamicResource SecondaryTextColor}" TextWrapping="Wrap" />
 
-		<StatusBar Grid.Row="2" Margin="0,12,0,0" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
+					<!-- Back Rooms Settings -->
+					<StackPanel Grid.Row="3" Margin="0,32,0,0">
+						<TextBlock Text="Back Rooms Settings" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+
+						<!-- Ticker Tape Toggle -->
+						<CheckBox Content="Enable Ticker Tape" 
+								  IsChecked="{Binding TickerTapeVisible}" 
+								  Margin="0,0,0,16"
+								  Foreground="{DynamicResource PrimaryTextColor}"
+								  Click="TickerTapeToggle_Click" />
+
+						<!-- Collectibles Source URL -->
+						<TextBlock Text="Collectibles Source URL (or file path)" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />
+						<TextBlock Text="Use 'file://' prefix for local files, or http/https for remote sources." 
+								   FontSize="11" 
+								   Foreground="{DynamicResource SecondaryTextColor}" 
+								   TextWrapping="Wrap" 
+								   Margin="0,0,0,8" />
+						<TextBox x:Name="CollectiblesSourceUrlTextBox"
+								 Text="{Binding CollectiblesSourceUrl, UpdateSourceTrigger=PropertyChanged}" 
+								 MinWidth="720" 
+								 Margin="0,0,0,4"
+								 Foreground="{DynamicResource PrimaryTextColor}" 
+								 Background="{DynamicResource CardBackgroundColor}" />
+						<Button Content="Save Collectibles URL" 
+								Margin="0,4,0,16" 
+								Padding="10,4" 
+								Click="SaveCollectiblesUrl_Click" />
+
+						<!-- Ticker Reviews URL -->
+						<TextBlock Text="Ticker Tape Reviews URL (or file path)" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />
+						<TextBlock Text="Reviews will scroll across the bottom of the window." 
+								   FontSize="11" 
+								   Foreground="{DynamicResource SecondaryTextColor}" 
+								   Margin="0,0,0,8" />
+						<TextBox x:Name="TickerReviewsUrlTextBox"
+								 Text="{Binding TickerReviewsUrl, UpdateSourceTrigger=PropertyChanged}" 
+								 MinWidth="720" 
+								 Margin="0,0,0,4"
+								 Foreground="{DynamicResource PrimaryTextColor}" 
+								 Background="{DynamicResource CardBackgroundColor}" />
+						<Button Content="Save Ticker Reviews URL" 
+								Margin="0,4,0,16" 
+								Padding="10,4" 
+								Click="SaveTickerReviewsUrl_Click" />
+
+						<!-- Late Fee URL -->
+						<TextBlock Text="Late Fee Payment URL" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />
+						<TextBlock Text="Where users go when they click 'Pay Your Late Fee'." 
+								   FontSize="11" 
+								   Foreground="{DynamicResource SecondaryTextColor}" 
+								   Margin="0,0,0,8" />
+						<TextBox x:Name="LateFeeUrlTextBox"
+								 Text="{Binding LateFeeUrl, UpdateSourceTrigger=PropertyChanged}" 
+								 MinWidth="720" 
+								 Margin="0,0,0,4"
+								 Foreground="{DynamicResource PrimaryTextColor}" 
+								 Background="{DynamicResource CardBackgroundColor}" />
+						<Button Content="Save Late Fee URL" 
+								Margin="0,4,0,0" 
+								Padding="10,4" 
+								Click="SaveLateFeeUrl_Click" />
+					</StackPanel>
+				</Grid>
+			</TabItem>
+
+			<TabItem Header="Back Rooms" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
+				<Grid Margin="8">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="270" />
+						<ColumnDefinition Width="16" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+
+					<!-- Left Panel: Navigation & Controls -->
+					<StackPanel Grid.Column="0">
+						<!-- Gem Counter -->
+						<TextBlock Text="Gems" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="{DynamicResource PrimaryTextColor}" />
+						<TextBox x:Name="GemCountTextBox" 
+								 Text="{Binding BackRoomsGems, UpdateSourceTrigger=PropertyChanged}" 
+								 FontSize="32" 
+								 FontWeight="Bold" 
+								 TextAlignment="Center"
+								 Margin="0,0,0,8"
+								 Background="Transparent"
+								 BorderThickness="0"
+								 Foreground="{DynamicResource PrimaryTextColor}"
+								 Cursor="IBeam"
+								 LostFocus="GemCountTextBox_LostFocus">
+							<TextBox.Style>
+								<Style TargetType="TextBox">
+									<Setter Property="Template">
+										<Setter.Value>
+											<ControlTemplate TargetType="TextBox">
+												<Border Background="{TemplateBinding Background}" 
+														BorderThickness="0">
+													<ScrollViewer x:Name="PART_ContentHost" 
+																  Margin="0"
+																  Focusable="False"
+																  HorizontalScrollBarVisibility="Hidden"
+																  VerticalScrollBarVisibility="Hidden"/>
+												</Border>
+											</ControlTemplate>
+										</Setter.Value>
+									</Setter>
+									<!-- Show subtle hint on hover -->
+									<Style.Triggers>
+										<Trigger Property="IsMouseOver" Value="True">
+											<Setter Property="Background" Value="{DynamicResource CardBackgroundColor}" />
+											<Setter Property="Opacity" Value="0.9" />
+										</Trigger>
+									</Style.Triggers>
+								</Style>
+							</TextBox.Style>
+						</TextBox>
+
+						<TextBlock x:Name="NextGemTimerText" 
+								   Text="Next gem in: --:--:--" 
+								   FontSize="11" 
+								   Foreground="{DynamicResource SecondaryTextColor}" 
+								   TextAlignment="Center"
+								   Margin="0,0,0,16" />
+
+						<!-- Loot Crate Button -->
+						<Button Content="Open Loot Crate" 
+								Style="{StaticResource RootButtonStyle}" 
+								FontSize="14"
+								Height="40"
+								Click="OpenLootCrate_Click" 
+								Margin="0,0,0,8" />
+
+						<!-- Reload Data Button (for testing) -->
+						<Button Content="🔄 Reload Data" 
+								Style="{StaticResource RootButtonStyle}" 
+								FontSize="12"
+								Click="ReloadBackRoomsData_Click" 
+								Margin="0,0,0,16"
+								ToolTip="Reload collectibles and reviews from URLs" />
+
+						<!-- Section Navigation -->
+						<TextBlock Text="Sections" FontWeight="SemiBold" Margin="0,8,0,8" Foreground="{DynamicResource PrimaryTextColor}" />
+						<ListBox x:Name="BackRoomsSectionList" 
+								 SelectedIndex="0"
+								 Height="200"
+								 SelectionChanged="BackRoomsSectionList_SelectionChanged">
+							<ListBoxItem Content="Collectibles" />
+							<ListBoxItem Content="Loot Crate Info" />
+						</ListBox>
+
+						<!-- Pay Late Fee Button -->
+						<Button Content="Pay Your Late Fee" 
+								Style="{StaticResource RootButtonStyle}" 
+								FontSize="13"
+								Margin="0,16,0,8"
+								Click="PayLateFee_Click" />
+					</StackPanel>
+
+					<!-- Right Panel: Content Area -->
+					<Grid Grid.Column="2">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="*" />
+							<RowDefinition Height="Auto" />
+						</Grid.RowDefinitions>
+
+						<!-- Collectibles Section -->
+						<Grid x:Name="CollectiblesSection" Visibility="Visible">
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+								<RowDefinition Height="Auto" />
+							</Grid.RowDefinitions>
+
+							<TextBlock Text="Your Collectibles" 
+									   FontSize="20" 
+									   FontWeight="SemiBold" 
+									   Margin="0,0,0,12"
+									   Foreground="{DynamicResource PrimaryTextColor}" />
+
+							<ListBox Grid.Row="1"
+									 ItemsSource="{Binding BackRoomsCollectibles}" 
+									 SelectedItem="{Binding SelectedCollectible}"
+									 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+									 SelectionMode="Single"
+									 Background="{DynamicResource BackgroundColor}">
+								<ListBox.ItemsPanel>
+									<ItemsPanelTemplate>
+										<WrapPanel IsItemsHost="True" />
+									</ItemsPanelTemplate>
+								</ListBox.ItemsPanel>
+								<ListBox.ItemContainerStyle>
+									<Style TargetType="ListBoxItem">
+										<Setter Property="Margin" Value="0,0,12,12" />
+										<Setter Property="Padding" Value="0" />
+									</Style>
+								</ListBox.ItemContainerStyle>
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<Border Width="250" Height="380" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="{DynamicResource CardBackgroundColor}" Padding="10">
+											<StackPanel>
+												<Border Height="280" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
+													<Image Source="{Binding LocalImagePath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
+												</Border>
+												<TextBlock Text="{Binding Name}" 
+														   FontWeight="SemiBold" 
+														   Margin="0,10,0,0" 
+														   FontSize="14"
+														   TextWrapping="Wrap" 
+														   Height="36"
+														   TextTrimming="CharacterEllipsis"
+														   Foreground="{DynamicResource PrimaryTextColor}" />
+												<TextBlock Text="{Binding Rarity}" 
+														   FontSize="11" 
+														   Foreground="{DynamicResource AccentColor}"
+														   Margin="0,4,0,0" />
+											</StackPanel>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+
+							<!-- Collectible Detail Panel -->
+							<Border Grid.Row="2" 
+									Margin="0,12,0,0" 
+									Padding="12" 
+									BorderBrush="#DDD" 
+									BorderThickness="1" 
+									CornerRadius="8" 
+									Background="{DynamicResource CardBackgroundColor}"
+									Visibility="{Binding SelectedCollectible, Converter={StaticResource NullToVisibilityConverter}}">
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*" />
+										<ColumnDefinition Width="200" />
+									</Grid.ColumnDefinitions>
+									<StackPanel>
+										<TextBlock Text="{Binding SelectedCollectible.Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+										<TextBlock Text="{Binding SelectedCollectible.Rarity, StringFormat='Rarity: {0}'}" 
+												   FontSize="13" 
+												   Foreground="{DynamicResource AccentColor}" 
+												   Margin="0,4,0,8" />
+										<TextBlock Text="{Binding SelectedCollectible.Description}" 
+												   TextWrapping="Wrap" 
+												   Foreground="{DynamicResource PrimaryTextColor}"
+												   Margin="0,8,0,0" />
+										<TextBlock Text="{Binding SelectedCollectible.WonDateUtc, StringFormat='Won: {0:yyyy-MM-dd HH:mm} UTC'}" 
+												   FontSize="11" 
+												   Foreground="{DynamicResource SecondaryTextColor}"
+												   Margin="0,8,0,0" />
+									</StackPanel>
+									<Border Grid.Column="1" 
+											Width="180" 
+											Height="180" 
+											CornerRadius="8" 
+											ClipToBounds="True"
+											HorizontalAlignment="Right">
+										<Image Source="{Binding SelectedCollectible.LocalImagePath, Converter={StaticResource ImagePathConverter}}" 
+											   Stretch="UniformToFill" />
+									</Border>
+								</Grid>
+							</Border>
+						</Grid>
+
+						<!-- Loot Crate Info Section -->
+						<Grid x:Name="LootCrateInfoSection" Visibility="Collapsed">
+							<StackPanel>
+								<TextBlock Text="How Loot Crates Work" 
+										   FontSize="20" 
+										   FontWeight="SemiBold" 
+										   Margin="0,0,0,12"
+										   Foreground="{DynamicResource PrimaryTextColor}" />
+								<TextBlock TextWrapping="Wrap" 
+										   Foreground="{DynamicResource PrimaryTextColor}"
+										   Margin="0,0,0,12">
+									<Run Text="Welcome to the Back Rooms - your video rental desk reward system!" />
+									<LineBreak /><LineBreak />
+									<Run Text="• Earn 1 gem every 24 hours" FontWeight="SemiBold" />
+									<LineBreak />
+									<Run Text="• Open loot crates for 1 gem each" FontWeight="SemiBold" />
+									<LineBreak />
+									<Run Text="• Collect rare items from your favorite shows and movies" FontWeight="SemiBold" />
+									<LineBreak /><LineBreak />
+									<Run Text="Or... if you're feeling cheeky, just type in the gem counter above! We know you will. 😄" FontStyle="Italic" />
+								</TextBlock>
+
+								<TextBlock Text="Available Collectibles" 
+										   FontSize="16" 
+										   FontWeight="SemiBold" 
+										   Margin="0,16,0,8"
+										   Foreground="{DynamicResource PrimaryTextColor}" />
+								<TextBlock x:Name="AvailableCollectiblesText"
+										   Text="Loading collectibles..." 
+										   TextWrapping="Wrap" 
+										   Foreground="{DynamicResource SecondaryTextColor}" />
+							</StackPanel>
+						</Grid>
+					</Grid>
+				</Grid>
+			</TabItem>
+		</TabControl>
+
+		<!-- Ticker Tape -->
+		<Border Grid.Row="2" 
+				Height="30" 
+				Background="{DynamicResource CardBackgroundColor}" 
+				BorderBrush="#DDD" 
+				BorderThickness="0,1,0,1"
+				Margin="0,8,0,0"
+				ClipToBounds="True"
+				Visibility="{Binding TickerTapeVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+			<Canvas x:Name="TickerCanvas" Height="30">
+				<TextBlock x:Name="TickerTextBlock"
+						   Canvas.Top="5"
+						   FontSize="14"
+						   Foreground="{DynamicResource PrimaryTextColor}"
+						   Text="{Binding TickerTapeText}">
+					<TextBlock.RenderTransform>
+						<TranslateTransform x:Name="TickerTransform" />
+					</TextBlock.RenderTransform>
+					<TextBlock.Resources>
+						<Storyboard x:Key="TickerAnimation" RepeatBehavior="Forever">
+							<DoubleAnimation Storyboard.TargetName="TickerTransform"
+											 Storyboard.TargetProperty="X"
+											 Duration="0:0:30" />
+						</Storyboard>
+					</TextBlock.Resources>
+				</TextBlock>
+			</Canvas>
+		</Border>
+
+		<StatusBar Grid.Row="3" Margin="0,12,0,0" Background="{DynamicResource CardBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}">
             <StatusBarItem Content="{Binding StatusText}" />
         </StatusBar>
     </Grid>
