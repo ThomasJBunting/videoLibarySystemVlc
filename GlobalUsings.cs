@@ -10,3 +10,4 @@ global using System.Windows.Input;
 global using System.Windows.Media;
 global using System.Windows.Media.Animation;
 global using System.Windows.Media.Effects;
+global using System.Windows.Media.Media3D;

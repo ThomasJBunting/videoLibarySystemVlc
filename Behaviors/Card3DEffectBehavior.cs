@@ -3,12 +3,13 @@ using SysWin = System.Windows;
 namespace VideoLibrarySystemVlc.Behaviors;
 
 /// <summary>
-/// Attached behavior that applies a 3D parallax tilt effect to a card based on mouse position.
-/// The card tilts toward the cursor as it moves over the element, creating a depth effect.
+/// Attached behavior that applies a 3D perspective tilt effect to a card based on mouse position.
+/// The card tilts toward the cursor as it moves over the element, creating a compelling parallax depth effect.
+/// Uses perspective transforms (skew/rotation combination) for proper X/Y axis tilt (not Z-axis spin).
 /// </summary>
 public static class Card3DEffectBehavior
 {
-	private const double MaxTiltAngle = 15.0; // Maximum tilt angle in degrees
+	private const double MaxTiltAngle = 15.0; // Maximum tilt angle in degrees for perspective
 	private const double AnimationDuration = 0.15; // Smooth animation duration in seconds
 
 	private static readonly Dictionary<FrameworkElement, TiltState> _tiltStates = new();
@@ -17,6 +18,9 @@ public static class Card3DEffectBehavior
 	{
 		public bool IsMouseOver { get; set; }
 		public SysWin.Point LastMousePosition { get; set; }
+		public double CurrentRotationX { get; set; } // X-axis rotation in degrees
+		public double CurrentRotationY { get; set; } // Y-axis rotation in degrees
+		public double CurrentDepthOffset { get; set; } // Z-depth offset (simulated via scale)
 	}
 
 	#region Attached Property: IsEnabled
@@ -68,21 +72,21 @@ public static class Card3DEffectBehavior
 		if (sender is not FrameworkElement element)
 			return;
 
-		// Ensure the element has a 3D transform group set up
+		// Set up transform group for perspective tilt effect
 		if (element.RenderTransform is not TransformGroup)
 		{
 			element.RenderTransform = new TransformGroup
 			{
 				Children =
 				{
-					new RotateTransform(),
-					new ScaleTransform(),
-					new TranslateTransform()
+					new SkewTransform(),        // For X/Y perspective
+					new ScaleTransform(),        // For depth simulation
+					new TranslateTransform()     // For subtle motion
 				}
 			};
 		}
 
-		// Set transform origin to center for proper rotation
+		// Set transform origin to center for proper rotation/tilt
 		element.RenderTransformOrigin = new SysWin.Point(0.5, 0.5);
 	}
 
@@ -116,109 +120,115 @@ public static class Card3DEffectBehavior
 		if (sender is not FrameworkElement element)
 			return;
 
-		if (!GetIsEnabled(element))
-			return;
-
 		if (!_tiltStates.TryGetValue(element, out var state) || !state.IsMouseOver)
 			return;
 
-		state.LastMousePosition = e.GetPosition(element);
-		UpdateTilt(element, state.LastMousePosition);
+		var mousePos = e.GetPosition(element);
+		state.LastMousePosition = mousePos;
+
+		// Calculate normalized position (-1 to 1)
+		var normalizedX = (mousePos.X / element.ActualWidth) * 2 - 1;
+		var normalizedY = (mousePos.Y / element.ActualHeight) * 2 - 1;
+
+		// Calculate rotation angles based on normalized position
+		var targetRotationX = normalizedY * MaxTiltAngle;      // Invert for intuitive tilt (move mouse down = tilt down)
+		var targetRotationY = -normalizedX * MaxTiltAngle;
+		var targetDepthScale = 1.0 - (Math.Abs(normalizedX) + Math.Abs(normalizedY)) * 0.1; // Subtle scale
+
+		UpdateTilt(element, targetRotationX, targetRotationY, targetDepthScale);
 	}
 
-	private static void UpdateTilt(FrameworkElement element, SysWin.Point mousePosition)
+	private static void UpdateTilt(FrameworkElement element, double targetRotationX, double targetRotationY, double targetDepthScale)
 	{
-		double width = element.ActualWidth;
-		double height = element.ActualHeight;
-
-		if (width == 0 || height == 0)
+		if (element.RenderTransform is not TransformGroup tg || tg.Children.Count < 3)
 			return;
 
-		// Calculate normalized position (-1 to 1 range)
-		double centerX = width / 2;
-		double centerY = height / 2;
-		double normalizedX = (mousePosition.X - centerX) / centerX;
-		double normalizedY = -(mousePosition.Y - centerY) / centerY; // Invert Y for intuitive tilt
+		var skew = tg.Children[0] as SkewTransform;
+		var scale = tg.Children[1] as ScaleTransform;
+		var translate = tg.Children[2] as TranslateTransform;
 
-		// Calculate rotation angles
-		double rotationY = normalizedX * MaxTiltAngle;
-		double rotationX = normalizedY * MaxTiltAngle;
+		if (skew == null || scale == null || translate == null)
+			return;
 
-		// Apply the tilt animation
-		AnimateTilt(element, rotationX, rotationY);
+		// Animate skew values to simulate 3D tilt
+		// SkewX simulates rotation around Y-axis, SkewY simulates rotation around X-axis
+		AnimateTilt(skew, targetRotationY, targetRotationX, scale, targetDepthScale);
 	}
 
-	private static void AnimateTilt(FrameworkElement element, double rotationX, double rotationY)
+	private static void AnimateTilt(SkewTransform skew, double targetSkewX, double targetSkewY, ScaleTransform scale, double targetScale)
 	{
-		if (element.RenderTransform is not TransformGroup transformGroup)
-			return;
-
-		var rotateTransform = transformGroup.Children.OfType<RotateTransform>().FirstOrDefault();
-		if (rotateTransform == null)
-			return;
-
-		// Create a composite transform that simulates 3D rotation
-		// We'll use RotateTransform and SkewTransform to approximate 3D perspective
 		var duration = TimeSpan.FromSeconds(AnimationDuration);
+		var easing = new QuadraticEase { EasingMode = EasingMode.EaseOut };
 
-		// Animate rotation (this is a 2D approximation of 3D tilt)
-		var angleAnimation = new DoubleAnimation
+		// Animate SkewX (simulates Y-axis rotation)
+		var skewXAnimation = new DoubleAnimation
 		{
-			To = rotationY * 0.3, // Scale down for subtlety
+			To = targetSkewX,
 			Duration = duration,
-			EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+			EasingFunction = easing
 		};
+		skew.BeginAnimation(SkewTransform.AngleXProperty, skewXAnimation);
 
-		rotateTransform.BeginAnimation(RotateTransform.AngleProperty, angleAnimation);
-
-		// Add a slight scale effect for depth
-		var scaleTransform = transformGroup.Children.OfType<ScaleTransform>().FirstOrDefault();
-		if (scaleTransform != null)
+		// Animate SkewY (simulates X-axis rotation)
+		var skewYAnimation = new DoubleAnimation
 		{
-			var scaleAnimation = new DoubleAnimation
-			{
-				To = 1.02, // Slight zoom
-				Duration = duration,
-				EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-			};
+			To = targetSkewY,
+			Duration = duration,
+			EasingFunction = easing
+		};
+		skew.BeginAnimation(SkewTransform.AngleYProperty, skewYAnimation);
 
-			scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
-			scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
-		}
+		// Animate scale (depth effect)
+		var scaleAnimation = new DoubleAnimation
+		{
+			To = targetScale,
+			Duration = duration,
+			EasingFunction = easing
+		};
+		scale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+		scale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
 	}
 
 	private static void AnimateTiltToNeutral(FrameworkElement element)
 	{
-		if (element.RenderTransform is not TransformGroup transformGroup)
+		if (element.RenderTransform is not TransformGroup tg || tg.Children.Count < 3)
+			return;
+
+		var skew = tg.Children[0] as SkewTransform;
+		var scale = tg.Children[1] as ScaleTransform;
+
+		if (skew == null || scale == null)
 			return;
 
 		var duration = TimeSpan.FromSeconds(AnimationDuration * 1.5);
+		var easing = new QuadraticEase { EasingMode = EasingMode.EaseOut };
 
-		// Reset rotation
-		var rotateTransform = transformGroup.Children.OfType<RotateTransform>().FirstOrDefault();
-		if (rotateTransform != null)
+		// Reset SkewX
+		var resetSkewXAnimation = new DoubleAnimation
 		{
-			var angleAnimation = new DoubleAnimation
-			{
-				To = 0,
-				Duration = duration,
-				EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-			};
-			rotateTransform.BeginAnimation(RotateTransform.AngleProperty, angleAnimation);
-		}
+			To = 0,
+			Duration = duration,
+			EasingFunction = easing
+		};
+		skew.BeginAnimation(SkewTransform.AngleXProperty, resetSkewXAnimation);
+
+		// Reset SkewY
+		var resetSkewYAnimation = new DoubleAnimation
+		{
+			To = 0,
+			Duration = duration,
+			EasingFunction = easing
+		};
+		skew.BeginAnimation(SkewTransform.AngleYProperty, resetSkewYAnimation);
 
 		// Reset scale
-		var scaleTransform = transformGroup.Children.OfType<ScaleTransform>().FirstOrDefault();
-		if (scaleTransform != null)
+		var resetScaleAnimation = new DoubleAnimation
 		{
-			var scaleAnimation = new DoubleAnimation
-			{
-				To = 1.0,
-				Duration = duration,
-				EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-			};
-			scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
-			scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
-		}
+			To = 1.0,
+			Duration = duration,
+			EasingFunction = easing
+		};
+		scale.BeginAnimation(ScaleTransform.ScaleXProperty, resetScaleAnimation);
+		scale.BeginAnimation(ScaleTransform.ScaleYProperty, resetScaleAnimation);
 	}
 }
