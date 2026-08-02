@@ -499,11 +499,11 @@
 									   Foreground="{DynamicResource PrimaryTextColor}" />
 
 							<ListBox Grid.Row="1"
-									 ItemsSource="{Binding BackRoomsCollectibles}" 
-									 SelectedItem="{Binding SelectedCollectible}"
-									 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-									 SelectionMode="Single"
-									 Background="{DynamicResource BackgroundColor}">
+									ItemsSource="{Binding BackRoomsCollectibleGroups}" 
+									SelectedItem="{Binding SelectedCollectibleGroup}"
+									ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+									SelectionMode="Single"
+									Background="{DynamicResource BackgroundColor}">
 								<ListBox.ItemsPanel>
 									<ItemsPanelTemplate>
 										<WrapPanel IsItemsHost="True" />
@@ -534,6 +534,11 @@
 														   FontSize="11" 
 														   Foreground="{DynamicResource AccentColor}"
 														   Margin="0,4,0,0" />
+												<!-- Show only the first (most recent) found date on the card -->
+												<TextBlock Text="{Binding PrimaryFoundDate, StringFormat='Found: {0:yyyy-MM-dd}'}" 
+														   FontSize="10" 
+														   Foreground="{DynamicResource SecondaryTextColor}"
+														   Margin="0,6,0,0" />
 											</StackPanel>
 										</Border>
 									</DataTemplate>
@@ -548,41 +553,82 @@
 									BorderThickness="1" 
 									CornerRadius="8" 
 									Background="{DynamicResource CardBackgroundColor}"
-									Visibility="{Binding SelectedCollectible, Converter={StaticResource NullToVisibilityConverter}}">
+									Visibility="{Binding SelectedCollectibleGroup, Converter={StaticResource NullToVisibilityConverter}}">
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="*" />
-										<ColumnDefinition Width="200" />
+										<ColumnDefinition Width="180" />
 									</Grid.ColumnDefinitions>
-									<StackPanel>
-										<TextBlock Text="{Binding SelectedCollectible.Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
-										<TextBlock Text="{Binding SelectedCollectible.Rarity, StringFormat='Rarity: {0}'}" 
+									<Grid.RowDefinitions>
+										<RowDefinition Height="Auto" />
+										<RowDefinition Height="*" />
+										<RowDefinition Height="Auto" />
+									</Grid.RowDefinitions>
+
+									<!-- Top: Title and Rarity -->
+									<StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,200,0">
+										<TextBlock Text="{Binding SelectedCollectibleGroup.Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+										<TextBlock Text="{Binding SelectedCollectibleGroup.Rarity, StringFormat='Rarity: {0}'}" 
 												   FontSize="13" 
 												   Foreground="{DynamicResource AccentColor}" 
 												   Margin="0,4,0,8" />
-										<TextBlock Text="{Binding SelectedCollectible.Description}" 
+									</StackPanel>
+
+									<!-- Middle-Left: Description and Found Dates (scrollable) -->
+									<StackPanel Grid.Row="1" Grid.Column="0">
+										<TextBlock Text="{Binding SelectedCollectibleGroup.Description}" 
 												   TextWrapping="Wrap" 
 												   Foreground="{DynamicResource PrimaryTextColor}"
-												   Margin="0,8,0,0" />
-										<TextBlock Text="{Binding SelectedCollectible.WonDateUtc, StringFormat='Won: {0:yyyy-MM-dd HH:mm} UTC'}" 
+												   Margin="0,0,0,12" />
+
+										<!-- Scrollable Found Dates -->
+										<TextBlock Text="Found Dates:" 
 												   FontSize="11" 
-												   Foreground="{DynamicResource SecondaryTextColor}"
-												   Margin="0,8,0,0" />
+												   FontWeight="SemiBold"
+												   Foreground="{DynamicResource PrimaryTextColor}"
+												   Margin="0,0,0,6" />
+										<ScrollViewer Height="80" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,12,0">
+											<ItemsControl ItemsSource="{Binding SelectedCollectibleGroup.FoundDates}">
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<TextBlock Text="{Binding StringFormat='• {0:yyyy-MM-dd HH:mm:ss} UTC'}" 
+																   FontSize="10" 
+																   Foreground="{DynamicResource SecondaryTextColor}"
+																   Margin="0,2,0,0" />
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</ScrollViewer>
 									</StackPanel>
-									<Border Grid.Column="1" 
+
+									<!-- Right: Image Thumbnail -->
+									<Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" 
 											Width="180" 
 											Height="180" 
 											CornerRadius="8" 
 											ClipToBounds="True"
-											HorizontalAlignment="Right">
-										<Image Source="{Binding SelectedCollectible.LocalImagePath, Converter={StaticResource ImagePathConverter}}" 
+											HorizontalAlignment="Right"
+											VerticalAlignment="Top">
+										<Image Source="{Binding SelectedCollectibleGroup.LocalImagePath, Converter={StaticResource ImagePathConverter}}" 
 											   Stretch="UniformToFill" />
+									</Border>
+
+									<!-- Bottom: View Full Image Button -->
+									<Border Grid.Row="2" Grid.Column="0" CornerRadius="8" Background="{DynamicResource AccentColor}" Margin="0,12,12,0">
+										<Button Content="View Full Image" 
+												Click="ViewFullImage_Click"
+												Padding="12,8"
+												Background="Transparent"
+												Foreground="White"
+												FontSize="12"
+												FontWeight="SemiBold"
+												BorderThickness="0" />
 									</Border>
 								</Grid>
 							</Border>
-						</Grid>
+							</Grid>
 
-						<!-- Loot Crate Info Section -->
+							<!-- Loot Crate Info Section -->
 						<Grid x:Name="LootCrateInfoSection" Visibility="Collapsed">
 							<StackPanel>
 								<TextBlock Text="How Loot Crates Work" 

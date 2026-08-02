@@ -58,7 +58,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
 	// Back Rooms properties
 	private ObservableCollection<Collectible> backRoomsCollectibles = [];
-	private Collectible? selectedCollectible;
+	private ObservableCollection<CollectibleGroup> backRoomsCollectibleGroups = [];
+	private CollectibleGroup? selectedCollectibleGroup;
 	private int backRoomsGems = 0;
 	private string tickerTapeText = string.Empty;
 	private bool tickerTapeVisible = true;
@@ -255,10 +256,16 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         set => SetField(ref backRoomsCollectibles, value);
     }
 
-    public Collectible? SelectedCollectible
+    public ObservableCollection<CollectibleGroup> BackRoomsCollectibleGroups
     {
-        get => selectedCollectible;
-        set => SetField(ref selectedCollectible, value);
+        get => backRoomsCollectibleGroups;
+        set => SetField(ref backRoomsCollectibleGroups, value);
+    }
+
+    public CollectibleGroup? SelectedCollectibleGroup
+    {
+        get => selectedCollectibleGroup;
+        set => SetField(ref selectedCollectibleGroup, value);
     }
 
     public int BackRoomsGems
@@ -464,6 +471,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         // Load state
         BackRoomsGems = backRoomsState.Gems;
         BackRoomsCollectibles = new ObservableCollection<Collectible>(backRoomsState.CollectedItems);
+        GroupCollectibles(); // Group collectibles by ID to handle duplicates
         TickerTapeVisible = appState.Settings.TickerTapeEnabled;
 
         // Set up gem timer (check every minute)
@@ -619,7 +627,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             {
                 BackRoomsGems = backRoomsState.Gems;
                 BackRoomsCollectibles.Add(wonCollectible);
-                SelectedCollectible = wonCollectible;
+                GroupCollectibles(); // Regroup to handle potential duplicates
 
                 System.Windows.MessageBox.Show($"Congratulations! You won:\n\n{wonCollectible.Name}\n\n{wonCollectible.Description}", 
                     "Loot Crate Opened!", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -894,6 +902,203 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void RemoveSeriesRoot_Click(object sender, RoutedEventArgs e) => RemoveRoot(SeriesRoots, SelectedSeriesRoot);
     private void RemoveMovieRoot_Click(object sender, RoutedEventArgs e) => RemoveRoot(MovieRoots, SelectedMovieRoot);
+
+    /// <summary>
+    /// Handle viewing full-sized collectible image in modal overlay.
+    /// </summary>
+    private void ViewFullImage_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedCollectibleGroup is null)
+        {
+            return;
+        }
+
+        // Show the modal overlay with the full image
+        ShowImageModal(SelectedCollectibleGroup);
+    }
+
+    /// <summary>
+    /// Show full image modal overlay with card details.
+    /// </summary>
+    private void ShowImageModal(CollectibleGroup collectible)
+    {
+        // Create modal overlay using a Grid with semi-transparent backdrop
+        var backdropGrid = new Grid
+        {
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 0, 0, 0))
+        };
+
+        // Create the modal content
+        var modalBorder = new Border
+        {
+            CornerRadius = new CornerRadius(16),
+            Background = (System.Windows.Media.Brush)this.FindResource("CardBackgroundColor"),
+            Width = 600,
+            Height = 700,
+            MaxHeight = 700,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+        };
+
+        var mainGrid = new Grid();
+        mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        // Scrollable content
+        var scrollViewer = new System.Windows.Controls.ScrollViewer
+        {
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Padding = new Thickness(24)
+        };
+
+        var contentStackPanel = new StackPanel();
+
+        // Close button
+        var closeButton = new System.Windows.Controls.Button
+        {
+            Content = "✕",
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+            Background = System.Windows.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            FontSize = 20,
+            Foreground = (System.Windows.Media.Brush)this.FindResource("PrimaryTextColor"),
+            Padding = new Thickness(8),
+            Margin = new Thickness(-8, -8, 0, 8)
+        };
+        closeButton.Click += (s, e) => ((Window)backdropGrid.Parent).Close();
+        contentStackPanel.Children.Add(closeButton);
+
+        // Image
+        var imageBorder = new Border
+        {
+            Height = 300,
+            CornerRadius = new CornerRadius(12),
+            ClipToBounds = true,
+            Margin = new Thickness(0, 0, 0, 16),
+            Background = (System.Windows.Media.Brush)this.FindResource("BackgroundColor")
+        };
+        imageBorder.Child = new System.Windows.Controls.Image
+        {
+            Source = new System.Windows.Media.Imaging.BitmapImage(
+                new Uri(collectible.LocalImagePath, UriKind.RelativeOrAbsolute)
+            ),
+            Stretch = System.Windows.Media.Stretch.UniformToFill
+        };
+        contentStackPanel.Children.Add(imageBorder);
+
+        // Title
+        var titleBlock = new TextBlock
+        {
+            Text = collectible.Name,
+            FontSize = 24,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (System.Windows.Media.Brush)this.FindResource("PrimaryTextColor"),
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+        contentStackPanel.Children.Add(titleBlock);
+
+        // Rarity
+        var rarityBlock = new TextBlock
+        {
+            Text = $"Rarity: {collectible.Rarity}",
+            FontSize = 14,
+            Foreground = (System.Windows.Media.Brush)this.FindResource("AccentColor"),
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        contentStackPanel.Children.Add(rarityBlock);
+
+        // Description
+        var descriptionBlock = new TextBlock
+        {
+            Text = collectible.Description,
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = (System.Windows.Media.Brush)this.FindResource("PrimaryTextColor"),
+            Margin = new Thickness(0, 0, 0, 16),
+            LineHeight = 20
+        };
+        contentStackPanel.Children.Add(descriptionBlock);
+
+        // Found Dates Title
+        var datesHeaderBlock = new TextBlock
+        {
+            Text = "Found Dates:",
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (System.Windows.Media.Brush)this.FindResource("PrimaryTextColor"),
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+        contentStackPanel.Children.Add(datesHeaderBlock);
+
+        // Found Dates
+        var datesControl = new ItemsControl
+        {
+            ItemsSource = collectible.FoundDates
+        };
+        var dateItemTemplate = new DataTemplate();
+        var dateTb = new FrameworkElementFactory(typeof(TextBlock));
+        dateTb.SetBinding(TextBlock.TextProperty, 
+            new System.Windows.Data.Binding { StringFormat = "• {0:dddd, MMMM d, yyyy HH:mm:ss} UTC" });
+        dateTb.SetValue(TextBlock.FontSizeProperty, 11.0);
+        dateTb.SetValue(TextBlock.ForegroundProperty, this.FindResource("SecondaryTextColor"));
+        dateTb.SetValue(TextBlock.MarginProperty, new Thickness(0, 0, 0, 4));
+        dateItemTemplate.VisualTree = dateTb;
+        datesControl.ItemTemplate = dateItemTemplate;
+        contentStackPanel.Children.Add(datesControl);
+
+        scrollViewer.Content = contentStackPanel;
+        mainGrid.Children.Add(scrollViewer);
+
+        // Close button at bottom
+        var closeButtonBottom = new System.Windows.Controls.Button
+        {
+            Content = "Close",
+            Padding = new Thickness(12, 8, 12, 8),
+            Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = System.Windows.Media.Brushes.White,
+            FontSize = 14,
+            FontWeight = FontWeights.SemiBold,
+            BorderThickness = new Thickness(0)
+        };
+        closeButtonBottom.Click += (s, e) => ((Window)backdropGrid.Parent).Close();
+
+        var closeButtonBorder = new Border
+        {
+            Child = closeButtonBottom,
+            CornerRadius = new CornerRadius(8),
+            Background = (System.Windows.Media.Brush)this.FindResource("AccentColor"),
+            Margin = new Thickness(24, 16, 24, 24),
+            Padding = new Thickness(0)
+        };
+        mainGrid.Children.Add(closeButtonBorder);
+        Grid.SetRow(closeButtonBorder, 1);
+
+        modalBorder.Child = mainGrid;
+        backdropGrid.Children.Add(modalBorder);
+
+        // Close when clicking the backdrop
+        backdropGrid.MouseLeftButtonDown += (s, e) =>
+        {
+            if (e.Source == backdropGrid)
+            {
+                ((Window)backdropGrid.Parent).Close();
+            }
+        };
+
+        // Create window to host the backdrop grid
+        var window = new Window
+        {
+            Title = $"View: {collectible.Name}",
+            WindowStyle = WindowStyle.None,
+            AllowsTransparency = true,
+            Background = System.Windows.Media.Brushes.Transparent,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            Content = backdropGrid
+        };
+
+        window.ShowDialog();
+    }
 
     private void RemoveRoot(ObservableCollection<LibraryRoot> collection, LibraryRoot? selected)
     {
@@ -1658,6 +1863,31 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 markerLookup.TryGetValue(path, out var rank);
                 return new EpisodeDisplayEntry(path, rank);
             }));
+    }
+
+    /// <summary>
+    /// Groups collectibles by ID to handle duplicates. Each group shows the card once with all found dates.
+    /// </summary>
+    private void GroupCollectibles()
+    {
+        var grouped = backRoomsCollectibles
+            .GroupBy(c => c.Id)
+            .Select(group => new CollectibleGroup
+            {
+                Id = group.Key,
+                Name = group.First().Name,
+                Description = group.First().Description,
+                LocalImagePath = group.First().LocalImagePath,
+                OriginalImageUrl = group.First().OriginalImageUrl,
+                Rarity = group.First().Rarity,
+                FoundDates = new ObservableCollection<DateTime>(
+                    group.OrderByDescending(c => c.WonDateUtc).Select(c => c.WonDateUtc)
+                )
+            })
+            .OrderByDescending(g => g.PrimaryFoundDate)
+            .ToList();
+
+        BackRoomsCollectibleGroups = new ObservableCollection<CollectibleGroup>(grouped);
     }
 
     private Dictionary<string, int> BuildEpisodeMarkerRankLookup(string seriesItemId)
