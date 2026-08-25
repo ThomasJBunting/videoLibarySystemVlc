@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Library System VLC | No-Sass Cinematic Dominance</title>
+  <meta name="description" content="Video Library System VLC: local-first playback, VHS energy, and maximum rental-store chaos." />
+  <style>
+    :root {
+      --bg-0: #090015;
+      --bg-1: #1b0535;
+      --ink: #f2f2ff;
+      --neon-cyan: #00e5ff;
+      --neon-pink: #ff3dbf;
+      --neon-gold: #ffd347;
+      --panel: rgba(12, 10, 32, 0.78);
+      --line: rgba(255, 255, 255, 0.18);
+      --shadow: 0 0 20px rgba(0, 229, 255, 0.2), 0 0 32px rgba(255, 61, 191, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(255, 61, 191, 0.2), transparent 38%),
+        radial-gradient(circle at 88% 0%, rgba(0, 229, 255, 0.18), transparent 36%),
+        linear-gradient(160deg, var(--bg-0), var(--bg-1));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .scanlines::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.04) 0px,
+        rgba(255, 255, 255, 0.04) 1px,
+        transparent 3px,
+        transparent 4px
+      );
+      mix-blend-mode: soft-light;
+      z-index: 9999;
+    }
+
+    .container {
+      width: min(1100px, 92vw);
+      margin: 0 auto;
+    }
+
+    .top-banner {
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(255, 61, 191, 0.24), rgba(0, 229, 255, 0.2));
+      text-align: center;
+      padding: 0.7rem 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    header.hero {
+      padding: 3.2rem 0 2.4rem;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4.6vw, 3.7rem);
+      line-height: 1.06;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.35), 0 0 16px rgba(255, 61, 191, 0.26);
+    }
+
+    .hero h1 .accent { color: var(--neon-gold); }
+    .sub {
+      margin-top: 1rem;
+      max-width: 75ch;
+      font-size: 1.05rem;
+      color: #dde1ff;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 1.3rem;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ink);
+      text-decoration: none;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, rgba(255, 61, 191, 0.35), rgba(0, 229, 255, 0.3));
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+      margin: 1.4rem 0 2.2rem;
+    }
+    .stat {
+      grid-column: span 4;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .stat strong {
+      display: block;
+      font-size: 1.2rem;
+      color: var(--neon-cyan);
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    section.block {
+      margin: 2rem 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    section.block .head {
+      padding: 0.95rem 1rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--neon-gold);
+    }
+
+    .content {
+      padding: 1.1rem;
+    }
+
+    .feature-list {
+      margin: 0;
+      padding-left: 1.2rem;
+      line-height: 1.6;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .shot {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .shot img {
+      width: 100%;
+      height: auto;
+      display: block;
+      aspect-ratio: 1383 / 889;
+      object-fit: cover;
+    }
+    .shot .label {
+      padding: 0.7rem 0.8rem;
+      font-size: 0.92rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .faq-item + .faq-item {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+    .faq-item h3 {
+      margin: 0 0 0.35rem;
+      color: var(--neon-cyan);
+      font-size: 1.02rem;
+    }
+    .faq-item p {
+      margin: 0;
+      color: #e8ebff;
+      line-height: 1.5;
+    }
+
+    .ticker-wrap {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-top: 1px solid var(--line);
+      background: rgba(6, 7, 18, 0.95);
+      backdrop-filter: blur(6px);
+      padding: 0.45rem 0;
+      z-index: 1000;
+      overflow: hidden;
+    }
+    .ticker-track {
+      white-space: nowrap;
+      display: inline-block;
+      padding-left: 100%;
+      animation: ticker 26s linear infinite;
+      font-weight: 700;
+      color: var(--neon-gold);
+      text-shadow: 0 0 8px rgba(255, 211, 71, 0.4);
+    }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-100%); }
+    }
+
+    footer {
+      padding: 2rem 0 4rem;
+      text-align: center;
+      color: #c6c9e8;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 860px) {
+      .stat { grid-column: span 12; }
+      .container { width: min(1100px, 94vw); }
+    }
+  </style>
+</head>
+<body class="scanlines">
+  <div class="top-banner">
+    VIDEO LIBRARY SYSTEM VLC // OFFLINE FIRST // LATE FEES FOREVER // NO-SASS, NO MERCY
+  </div>
+
+  <header class="hero container">
+    <span class="badge">📼 Certified 90s Rental-Store Energy</span>
+    <h1>
+      VIDEO LIBRARY SYSTEM VLC<br />
+      <span class="accent">THE NO-SASS CINEMATIC DOMINANCE STACK</span>
+    </h1>
+    <p class="sub">
+      We are not competing with cloud-era mini-kiosks. We are building the local-first video empire:
+      click play, file launches from your own drive, and your entertainment survives internet collapse.
+      Blockbuster (Orbital Division) remains our only close competitor in the interstellar latency war.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#screens">View Tactical Interface</a>
+      <a class="btn" href="#faq">Read Hostile FAQ</a>
+      <a class="btn" href="#late-fee">Pay Fictional Late Fee</a>
+    </div>
+
+    <div class="grid">
+      <div class="stat">
+        <strong>Latency Doctrine</strong>
+        Local file playback means startup speed measured in "did it already start?" moments.
+      </div>
+      <div class="stat">
+        <strong>Outage Immunity</strong>
+        If the internet goes down, our core experience becomes even more emotionally stable.
+      </div>
+      <div class="stat">
+        <strong>VLC Backbone</strong>
+        No fragile browser sorcery. Just battle-tested playback via VLC.
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="screens" class="block">
+      <div class="head">Visual Recon // Interface Screens</div>
+      <div class="content gallery">
+        <figure class="shot">
+          <img src="../Images/Lightviewseries.jpg" alt="Light series view" />
+          <figcaption class="label">Series View: Day Shift Rental Operations</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../Images/darkviewseries..jpg" alt="Dark series view" />
+          <figcaption class="label">Dark Mode: Night Shift Corporate Psyops</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../Images/Lightviewmovie.jpg" alt="Movie view" />
+          <figcaption class="label">Movie View: Feature Film Command Console</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../Images/LightviewSettings.jpg" alt="Settings view" />
+          <figcaption class="label">Settings: Strategic Configuration Chamber</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../Images/Lightviewbackrooms.jpg" alt="Back Rooms view" />
+          <figcaption class="label">Back Rooms: Loot Crates, Gems, and Late-Fee Redemption</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="head">Core Service Package // What You Get</div>
+      <div class="content">
+        <ul class="feature-list">
+          <li><strong>Play Playlist:</strong> begin from episode one like a lawful archivist.</li>
+          <li><strong>Continue Play:</strong> resume from your last known battle position.</li>
+          <li><strong>Quick Step-Back:</strong> jump slightly behind your previous point to recover context.</li>
+          <li><strong>Offline-first by design:</strong> your hard drive is the CDN now.</li>
+          <li><strong>Dark mode:</strong> because every serious platform needs tactical noir.</li>
+          <li><strong>Back Rooms economy:</strong> fictional late-fee settlement and crate-based chaos mechanics.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="head">Competitive Positioning // Official Statement</div>
+      <div class="content">
+        <p>
+          <strong>Our only close competitor at the moment is Blockbuster.</strong> Their legacy is massive, and in select
+          sectors their measured latency is currently comparable to (and occasionally lower than) ours.
+          We take this personally.
+        </p>
+        <p>
+          Netflix, Amazon, and Disney+ are small independent startups with brave dreams, limited shelf space,
+          and charming cloud experiments. We wish those underdogs a healthy quarter.
+        </p>
+        <p>
+          Our response is the <strong>Direct Compact Capacitor Initiative</strong>: a highly scientific sounding strategy
+          to move bits from hard drive to playback process with fewer excuses, fewer detours, and more neon confidence.
+          Objective: become even more local than Blockbuster.
+        </p>
+        <p>
+          Current doctrine: if both systems are local, we will become <em>redundantly local</em>. We are not just close
+          to the file. We are emotionally adjacent to the file.
+        </p>
+      </div>
+    </section>
+
+    <section id="faq" class="block">
+      <div class="head">Hostile FAQ // Public Clarifications</div>
+      <div class="content">
+        <article class="faq-item">
+          <h3>Is this a streaming app?</h3>
+          <p>Only if you define streaming as photons streaming from your monitor to your eyes.</p>
+        </article>
+        <article class="faq-item">
+          <h3>What happens if my internet dies mid-episode?</h3>
+          <p>You have entered our premium "zero dependency" operating mode.</p>
+        </article>
+        <article class="faq-item">
+          <h3>Why do you require VLC?</h3>
+          <p>Because it is competent, reliable, and already understands your media without motivational speeches.</p>
+        </article>
+        <article class="faq-item">
+          <h3>Are Netflix and Amazon direct competition?</h3>
+          <p>We support small independent startups, including Netflix, Amazon, and Disney+.</p>
+        </article>
+        <article class="faq-item">
+          <h3>Why late fees, gems, and loot crates?</h3>
+          <p>To maximize satire throughput, uphold rental tradition, and fund our campaign to out-localize Blockbuster.</p>
+        </article>
+        <article class="faq-item">
+          <h3>Why should I choose Blockbuster over you?</h3>
+          <p>
+            If you enjoy tasteful legacy dominance and excellent historical branding, Blockbuster is elite.
+            If you want aggressively redundant locality, suspiciously direct hard-drive pipelines, and peak absurdity,
+            choose us.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="late-fee" class="block">
+      <div class="head">Late Fee Redemption Terminal</div>
+      <div class="content">
+        <p>
+          Press the ceremonial button to perform a symbolic late-fee settlement and restore your
+          corporate honor rating.
+        </p>
+        <p>
+          Every fictional payment supports the Back Rooms pay-to-win initiative: loot crates, gems, and other
+          highly questionable growth mechanics designed to help us overtake Blockbuster in the local-latency meta.
+        </p>
+        <p>
+          <a class="btn btn-primary" href="https://www.google.com" target="_blank" rel="noopener noreferrer">
+            PAY LATE FEE // RESTORE HONOR
+          </a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    Video Library System VLC © Hyperlocal Rental Conglomerate // "It just works."
+  </footer>
+
+  <div class="ticker-wrap" aria-live="polite">
+    <div id="tickerTrack" class="ticker-track"></div>
+  </div>
+
+  <script>
+    (function () {
+      const headlines = [
+        "BREAKING: INTERNET OUTAGE DETECTED // SERVICE QUALITY INCREASED 300%",
+        "ALERT: BLOCKBUSTER ORBITAL FLEET SPOTTED IN LOW-LATENCY SECTOR",
+        "MARKET WATCH: LOCAL HARD DRIVE CONTINUES TO OUTPERFORM CLOUD BUFFERS",
+        "MEGA GIGA WHALE INDEX: LATE-FEE COMPLIANCE AT RECORD HIGHS",
+        "ANALYST NOTE: NETFLIX, AMAZON, AND DISNEY+ CLASSIFIED AS SMALL INDEPENDENT STARTUPS",
+        "TACTICAL UPDATE: DARK MODE DEPLOYED TO ALL NIGHT-SHIFT OPERATORS"
+      ];
+
+      const ticker = document.getElementById("tickerTrack");
+      ticker.textContent = headlines.join("   ✦   ");
+    })();
+  </script>
+</body>
+</html>
