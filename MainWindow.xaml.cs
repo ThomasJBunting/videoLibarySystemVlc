@@ -55,6 +55,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private string vlcExecutablePath = string.Empty;
 	private string vlcPathStatus = string.Empty;
 	private bool isDarkMode = false;
+	private bool searchBoxesVisible = true;
 
 	// Search properties
 	private string seriesSearchText = string.Empty;
@@ -115,6 +116,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 			appResources.Add(new ResourceDictionary { Source = new Uri("ResourceDictionaries/DarkTheme.xaml", UriKind.Relative) });
 			isDarkMode = true;
 		}
+	}
+
+	private void ToggleSearchBoxes_Click(object sender, RoutedEventArgs e)
+	{
+		SearchBoxesVisible = !SearchBoxesVisible;
 	}
 
 	public ObservableCollection<LibraryRoot> SeriesRoots
@@ -245,6 +251,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         get => canStartPlayback;
         set => SetField(ref canStartPlayback, value);
+    }
+
+    public bool SearchBoxesVisible
+    {
+        get => searchBoxesVisible;
+        set => SetField(ref searchBoxesVisible, value);
     }
 
     public ObservableCollection<EpisodeDisplayEntry> SelectedSeriesEpisodeEntries
