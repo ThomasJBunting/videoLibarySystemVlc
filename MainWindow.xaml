@@ -80,11 +80,22 @@
 
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ListBox ItemsSource="{Binding SeriesVisibleItems}" SelectedItem="{Binding SelectedSeriesItem}"
+                        <TextBox Grid.Row="0" 
+                                 Text="{Binding SeriesSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="8"
+                                 Margin="0,0,0,8"
+                                 FontSize="13"
+                                 Background="{DynamicResource CardBackgroundColor}"
+                                 Foreground="{DynamicResource PrimaryTextColor}"
+                                 BorderBrush="#DDD"
+                                 BorderThickness="1" />
+
+                        <ListBox Grid.Row="1" ItemsSource="{Binding SeriesVisibleItems}" SelectedItem="{Binding SelectedSeriesItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  SelectionMode="Single"
                                  Background="{DynamicResource BackgroundColor}">
@@ -144,7 +155,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}">
+                        <Border Grid.Row="2" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -242,11 +253,22 @@
 
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ListBox ItemsSource="{Binding MovieVisibleItems}" SelectedItem="{Binding SelectedMovieItem}"
+                        <TextBox Grid.Row="0" 
+                                 Text="{Binding MovieSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="8"
+                                 Margin="0,0,0,8"
+                                 FontSize="13"
+                                 Background="{DynamicResource CardBackgroundColor}"
+                                 Foreground="{DynamicResource PrimaryTextColor}"
+                                 BorderBrush="#DDD"
+                                 BorderThickness="1" />
+
+                        <ListBox Grid.Row="1" ItemsSource="{Binding MovieVisibleItems}" SelectedItem="{Binding SelectedMovieItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  SelectionMode="Single"
                                  Background="{DynamicResource BackgroundColor}">
@@ -277,7 +299,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Border Grid.Row="1" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}">
+                        <Border Grid.Row="2" Margin="0,12,0,0" Padding="12" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -488,6 +510,7 @@
 						<Grid x:Name="CollectiblesSection" Visibility="Visible">
 							<Grid.RowDefinitions>
 								<RowDefinition Height="Auto" />
+								<RowDefinition Height="Auto" />
 								<RowDefinition Height="*" />
 								<RowDefinition Height="Auto" />
 							</Grid.RowDefinitions>
@@ -498,7 +521,17 @@
 									   Margin="0,0,0,12"
 									   Foreground="{DynamicResource PrimaryTextColor}" />
 
-							<ListBox Grid.Row="1"
+							<TextBox Grid.Row="1" 
+									 Text="{Binding CollectiblesSearchText, UpdateSourceTrigger=PropertyChanged}"
+									 Padding="8"
+									 Margin="0,0,0,8"
+									 FontSize="13"
+									 Background="{DynamicResource CardBackgroundColor}"
+									 Foreground="{DynamicResource PrimaryTextColor}"
+									 BorderBrush="#DDD"
+									 BorderThickness="1" />
+
+							<ListBox Grid.Row="2"
 									 ItemsSource="{Binding BackRoomsCollectibles}" 
 									 SelectedItem="{Binding SelectedCollectible}"
 									 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -541,7 +574,7 @@
 							</ListBox>
 
 							<!-- Collectible Detail Panel -->
-							<Border Grid.Row="2" 
+							<Border Grid.Row="3" 
 									Margin="0,12,0,0" 
 									Padding="12" 
 									BorderBrush="#DDD" 

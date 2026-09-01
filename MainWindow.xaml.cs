@@ -56,6 +56,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private string vlcPathStatus = string.Empty;
 	private bool isDarkMode = false;
 
+	// Search properties
+	private string seriesSearchText = string.Empty;
+	private string movieSearchText = string.Empty;
+	private string collectiblesSearchText = string.Empty;
+
 	// Back Rooms properties
 	private ObservableCollection<Collectible> backRoomsCollectibles = [];
 	private Collectible? selectedCollectible;
@@ -308,6 +313,42 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    public string SeriesSearchText
+    {
+        get => seriesSearchText;
+        set
+        {
+            if (SetField(ref seriesSearchText, value))
+            {
+                RefreshVisibleItems();
+            }
+        }
+    }
+
+    public string MovieSearchText
+    {
+        get => movieSearchText;
+        set
+        {
+            if (SetField(ref movieSearchText, value))
+            {
+                RefreshVisibleItems();
+            }
+        }
+    }
+
+    public string CollectiblesSearchText
+    {
+        get => collectiblesSearchText;
+        set
+        {
+            if (SetField(ref collectiblesSearchText, value))
+            {
+                RefreshVisibleCollectibles();
+            }
+        }
+    }
+
     public string? CollectiblesSourceUrl
     {
         get => appState.Settings.CollectiblesSourceUrl;
@@ -415,8 +456,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void RefreshVisibleItems()
     {
-        SeriesVisibleItems = new ObservableCollection<MediaItem>(SeriesItems.Where(item => IsVisibleForRoot(item, SelectedSeriesRoot)));
-        MovieVisibleItems = new ObservableCollection<MediaItem>(MovieItems.Where(item => IsVisibleForRoot(item, SelectedMovieRoot)));
+        SeriesVisibleItems = new ObservableCollection<MediaItem>(SeriesItems
+            .Where(item => IsVisibleForRoot(item, SelectedSeriesRoot) && MatchesSearchQuery(item.Title, SeriesSearchText)));
+
+        MovieVisibleItems = new ObservableCollection<MediaItem>(MovieItems
+            .Where(item => IsVisibleForRoot(item, SelectedMovieRoot) && MatchesSearchQuery(item.Title, MovieSearchText)));
 
         if (SelectedSeriesItem is not null && !SeriesVisibleItems.Contains(SelectedSeriesItem))
         {
@@ -437,6 +481,38 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         return string.Equals(item.RootPath, selectedRoot.Path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesSearchQuery(string itemName, string searchQuery)
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return true;
+        }
+
+        // Convert both to lowercase for case-insensitive comparison
+        var lowerName = itemName.ToLowerInvariant();
+        var lowerQuery = searchQuery.ToLowerInvariant();
+
+        // Split search query by spaces and treat each part as a required match (AND logic)
+        var searchTerms = lowerQuery.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+        // All terms must be found in the name (as substrings)
+        return searchTerms.All(term => lowerName.Contains(term));
+    }
+
+    private void RefreshVisibleCollectibles()
+    {
+        var filtered = backRoomsState.CollectedItems
+            .Where(collectible => MatchesSearchQuery(collectible.Name, CollectiblesSearchText))
+            .ToList();
+
+        BackRoomsCollectibles = new ObservableCollection<Collectible>(filtered);
+
+        if (SelectedCollectible is not null && !BackRoomsCollectibles.Contains(SelectedCollectible))
+        {
+            SelectedCollectible = BackRoomsCollectibles.FirstOrDefault();
+        }
     }
 
     private void AutoConfigureVlcPath()
