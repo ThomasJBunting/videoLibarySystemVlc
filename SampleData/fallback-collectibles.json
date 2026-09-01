@@ -1,0 +1,18 @@
+[
+  {
+	"id": "sassy-mascot",
+	"name": "Sassy",
+	"description": "No subscription fees, just late fees. The fearless competitor who took on Blockbuster and won with charm, wit, and a rebellious spirit. Established in the golden age of cinema.",
+	"imageUrl": "pack://application:,,,/Images/mascoss/BaseNoSas.jpg",
+	"dropWeight": 25,
+	"rarity": "Uncommon"
+  },
+  {
+	"id": "retro-1950s",
+	"name": "Retro Gem",
+	"description": "A classic 1950s character from the golden age of entertainment. Brings back memories of drive-in theaters, milkshakes, and the birth of modern pop culture.",
+	"imageUrl": "pack://application:,,,/Images/mascoss/mascost.jpg",
+	"dropWeight": 25,
+	"rarity": "Uncommon"
+  }
+]

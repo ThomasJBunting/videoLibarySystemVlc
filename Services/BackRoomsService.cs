@@ -69,12 +69,20 @@ public sealed class BackRoomsService
 
 	/// <summary>
 	/// Load collectible definitions from a URL or file path.
-	/// Supports http://, https://, or file:// schemes.
+	/// Supports http://, https://, file:// schemes, or "fallback" keyword.
+	/// Falls back to embedded fallback collectibles on failure.
 	/// </summary>
 	public async Task<List<CollectibleDefinition>> LoadCollectibleDefinitionsAsync(string sourceUrl)
 	{
 		try
 		{
+			// Special case: "fallback" keyword immediately loads fallback collectibles
+			if (sourceUrl.Equals("fallback", StringComparison.OrdinalIgnoreCase))
+			{
+				System.Diagnostics.Debug.WriteLine("[BackRooms] Loading fallback collectibles (requested explicitly)");
+				return await LoadFallbackCollectiblesAsync();
+			}
+
 			string json;
 
 			if (sourceUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
@@ -86,7 +94,8 @@ public sealed class BackRoomsService
 				}
 				else
 				{
-					return [];
+					System.Diagnostics.Debug.WriteLine($"[BackRooms] File not found: {filePath}, loading fallback collectibles");
+					return await LoadFallbackCollectiblesAsync();
 				}
 			}
 			else if (sourceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -103,15 +112,49 @@ public sealed class BackRoomsService
 				}
 				else
 				{
-					return [];
+					System.Diagnostics.Debug.WriteLine($"[BackRooms] Local file not found: {sourceUrl}, loading fallback collectibles");
+					return await LoadFallbackCollectiblesAsync();
 				}
 			}
 
 			var definitions = JsonSerializer.Deserialize<List<CollectibleDefinition>>(json, JsonOptions);
 			return definitions ?? [];
 		}
-		catch
+		catch (Exception ex)
 		{
+			System.Diagnostics.Debug.WriteLine($"[BackRooms] Error loading collectibles from {sourceUrl}: {ex.Message}, loading fallback collectibles");
+			return await LoadFallbackCollectiblesAsync();
+		}
+	}
+
+	/// <summary>
+	/// Load fallback collectibles from the embedded resource.
+	/// Used when the primary source URL is unavailable or fails.
+	/// </summary>
+	private async Task<List<CollectibleDefinition>> LoadFallbackCollectiblesAsync()
+	{
+		try
+		{
+			var packUri = new Uri("pack://application:,,,/SampleData/fallback-collectibles.json", UriKind.Absolute);
+			var resourceStream = System.Windows.Application.GetResourceStream(packUri);
+
+			if (resourceStream?.Stream != null)
+			{
+				using (var reader = new StreamReader(resourceStream.Stream))
+				{
+					var json = await reader.ReadToEndAsync();
+					var definitions = JsonSerializer.Deserialize<List<CollectibleDefinition>>(json, JsonOptions);
+					System.Diagnostics.Debug.WriteLine("[BackRooms] Loaded fallback collectibles from embedded resource");
+					return definitions ?? [];
+				}
+			}
+
+			System.Diagnostics.Debug.WriteLine("[BackRooms] Fallback collectibles resource not found");
+			return [];
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"[BackRooms] Error loading fallback collectibles: {ex.Message}");
 			return [];
 		}
 	}
@@ -229,6 +272,7 @@ public sealed class BackRoomsService
 
 	/// <summary>
 	/// Download collectible image from URL and save to local cache folder.
+	/// Handles WPF pack URIs for embedded resources, HTTP/HTTPS URLs, and local file paths.
 	/// Returns the local file path, or null if download fails.
 	/// </summary>
 	private async Task<string?> DownloadCollectibleImageAsync(CollectibleDefinition definition)
@@ -256,8 +300,45 @@ public sealed class BackRoomsService
 				return localPath;
 			}
 
-			// Download the image
-			if (definition.ImageUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+			// Check for WPF pack URI (embedded resources)
+			if (definition.ImageUrl.StartsWith("pack://", StringComparison.OrdinalIgnoreCase))
+			{
+				try
+				{
+					var packUri = new Uri(definition.ImageUrl, UriKind.Absolute);
+					var resourceStream = System.Windows.Application.GetResourceStream(packUri);
+
+					if (resourceStream?.Stream != null)
+					{
+						using (var fileStream = File.Create(localPath))
+						{
+							await resourceStream.Stream.CopyToAsync(fileStream);
+						}
+						System.Diagnostics.Debug.WriteLine($"[BackRooms] Extracted WPF embedded resource: {definition.ImageUrl} -> {localPath}");
+						return localPath;
+					}
+					else
+					{
+						System.Diagnostics.Debug.WriteLine($"[BackRooms] WPF pack URI resource not found: {definition.ImageUrl}");
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"[BackRooms] Failed to load WPF pack URI: {definition.ImageUrl} - {ex.Message}");
+				}
+			}
+			// Download from HTTP/HTTPS
+			else if (definition.ImageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+					 definition.ImageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+			{
+				System.Diagnostics.Debug.WriteLine($"[BackRooms] Downloading image from: {definition.ImageUrl}");
+				var imageBytes = await HttpClient.GetByteArrayAsync(definition.ImageUrl);
+				await File.WriteAllBytesAsync(localPath, imageBytes);
+				System.Diagnostics.Debug.WriteLine($"[BackRooms] Downloaded {imageBytes.Length} bytes to: {localPath}");
+				return localPath;
+			}
+			// Handle file:// URIs (for backward compatibility)
+			else if (definition.ImageUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
 			{
 				var sourceFilePath = definition.ImageUrl.Substring(7);
 				if (File.Exists(sourceFilePath))
@@ -271,18 +352,9 @@ public sealed class BackRoomsService
 					System.Diagnostics.Debug.WriteLine($"[BackRooms] Local file not found: {sourceFilePath}");
 				}
 			}
-			else if (definition.ImageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-					 definition.ImageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-			{
-				System.Diagnostics.Debug.WriteLine($"[BackRooms] Downloading image from: {definition.ImageUrl}");
-				var imageBytes = await HttpClient.GetByteArrayAsync(definition.ImageUrl);
-				await File.WriteAllBytesAsync(localPath, imageBytes);
-				System.Diagnostics.Debug.WriteLine($"[BackRooms] Downloaded {imageBytes.Length} bytes to: {localPath}");
-				return localPath;
-			}
+			// Treat as local file path
 			else
 			{
-				// Treat as local file path
 				if (File.Exists(definition.ImageUrl))
 				{
 					File.Copy(definition.ImageUrl, localPath, true);

@@ -11,6 +11,15 @@
     <ApplicationIcon>Assets\videotape.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Images\mascoss\BaseNoSas.jpg" />
+    <None Remove="Images\mascoss\mascost.jpg" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="ResourceDictionaries\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\mascoss\BaseNoSas.jpg" />
+    <Resource Include="Images\mascoss\mascost.jpg" />
+    <Resource Include="SampleData\fallback-collectibles.json" />
   </ItemGroup>
 </Project>

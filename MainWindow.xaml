@@ -116,7 +116,7 @@
                                                     <ColumnDefinition Width="34" />
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.Column="0"
-                                                        Content="Play Playlist"
+                                                        Content="Start Playlist"
                                                         Padding="10,4"
                                                         IsEnabled="{Binding CanStartPlayback}"
                                                         Click="PlaySeriesPlaylist_Click" />
