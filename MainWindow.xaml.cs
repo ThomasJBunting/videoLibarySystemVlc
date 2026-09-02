@@ -55,7 +55,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private string vlcExecutablePath = string.Empty;
 	private string vlcPathStatus = string.Empty;
 	private bool isDarkMode = false;
-	private bool searchBoxesVisible = true;
+	private bool searchBoxesVisible = false;
 
 	// Search properties
 	private string seriesSearchText = string.Empty;

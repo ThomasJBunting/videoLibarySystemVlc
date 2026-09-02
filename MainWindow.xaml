@@ -41,7 +41,6 @@
 
 		<DockPanel Grid.Row="0" Margin="0,0,0,12">
 			<TextBlock Text="Video Library System VLC" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
-			<Button Content="Toggle Search" DockPanel.Dock="Right" Click="ToggleSearchBoxes_Click" Margin="8,0,0,0" />
 			<Button Content="Toggle Dark Mode" DockPanel.Dock="Right" Click="ToggleDarkMode_Click" Margin="20,0,0,0" />
 			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource SecondaryTextColor}" />
 		</DockPanel>
@@ -85,17 +84,34 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+						<Canvas Panel.ZIndex="10" IsHitTestVisible="True">
+							<Button Content="🔍" 
+            Click="ToggleSearchBoxes_Click"
+            Canvas.Right="30"
+            Canvas.Top="4"
+            Padding="4"
+            Background="Transparent"
+            BorderThickness="0"
+            Foreground="{DynamicResource PrimaryTextColor}"
+            FontSize="14"
+            Cursor="Hand"
+            ToolTip="Toggle search visibility" />
+						</Canvas>
+						<!-- Search TextBox Row Container -->
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <!-- Search TextBox - determines row height -->
+                            <TextBox Text="{Binding SeriesSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="8"
+                                     FontSize="13"
+                                     Background="{DynamicResource CardBackgroundColor}"
+                                     Foreground="{DynamicResource PrimaryTextColor}"
+                                     BorderBrush="#DDD"
+                                     BorderThickness="1"
+                                     Visibility="{Binding SearchBoxesVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-                        <TextBox Grid.Row="0" 
-                                 Text="{Binding SeriesSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 Padding="8"
-                                 Margin="0,0,0,8"
-                                 FontSize="13"
-                                 Background="{DynamicResource CardBackgroundColor}"
-                                 Foreground="{DynamicResource PrimaryTextColor}"
-                                 BorderBrush="#DDD"
-                                 BorderThickness="1"
-                                 Visibility="{Binding SearchBoxesVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <!-- Overlay Canvas - button floats absolutely, doesn't affect layout -->
+                            
+                        </Grid>
 
                         <ListBox Grid.Row="1" ItemsSource="{Binding SeriesVisibleItems}" SelectedItem="{Binding SelectedSeriesItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -260,16 +276,33 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBox Grid.Row="0" 
-                                 Text="{Binding MovieSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 Padding="8"
-                                 Margin="0,0,0,8"
-                                 FontSize="13"
-                                 Background="{DynamicResource CardBackgroundColor}"
-                                 Foreground="{DynamicResource PrimaryTextColor}"
-                                 BorderBrush="#DDD"
-                                 BorderThickness="1"
-                                 Visibility="{Binding SearchBoxesVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <!-- Search TextBox Row Container -->
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <!-- Search TextBox - determines row height -->
+                            <TextBox Text="{Binding MovieSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="8"
+                                     FontSize="13"
+                                     Background="{DynamicResource CardBackgroundColor}"
+                                     Foreground="{DynamicResource PrimaryTextColor}"
+                                     BorderBrush="#DDD"
+                                     BorderThickness="1"
+                                     Visibility="{Binding SearchBoxesVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <!-- Overlay Canvas - button floats absolutely, doesn't affect layout -->
+                            <Canvas Panel.ZIndex="10" IsHitTestVisible="True">
+                                <Button Content="🔍" 
+                                        Click="ToggleSearchBoxes_Click"
+                                        Canvas.Right="10"
+                                        Canvas.Top="4"
+                                        Padding="4"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="{DynamicResource PrimaryTextColor}"
+                                        FontSize="14"
+                                        Cursor="Hand"
+                                        ToolTip="Toggle search visibility" />
+                            </Canvas>
+                        </Grid>
 
                         <ListBox Grid.Row="1" ItemsSource="{Binding MovieVisibleItems}" SelectedItem="{Binding SelectedMovieItem}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -522,22 +555,39 @@
 									   FontSize="20" 
 									   FontWeight="SemiBold" 
 									   Margin="0,0,0,12"
-									   Foreground="{DynamicResource PrimaryTextColor}" />
+										  Foreground="{DynamicResource PrimaryTextColor}" />
 
-							<TextBox Grid.Row="1" 
-									 Text="{Binding CollectiblesSearchText, UpdateSourceTrigger=PropertyChanged}"
-									 Padding="8"
-									 Margin="0,0,0,8"
-									 FontSize="13"
-									 Background="{DynamicResource CardBackgroundColor}"
-									 Foreground="{DynamicResource PrimaryTextColor}"
-									 BorderBrush="#DDD"
-									 BorderThickness="1"
-									 Visibility="{Binding SearchBoxesVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+									   <!-- Search TextBox Row Container -->
+									   <Grid Grid.Row="1" Margin="0,0,0,8">
+										   <!-- Search TextBox - determines row height -->
+										   <TextBox Text="{Binding CollectiblesSearchText, UpdateSourceTrigger=PropertyChanged}"
+													Padding="8"
+													FontSize="13"
+													Background="{DynamicResource CardBackgroundColor}"
+													Foreground="{DynamicResource PrimaryTextColor}"
+													BorderBrush="#DDD"
+													BorderThickness="1"
+													Visibility="{Binding SearchBoxesVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-							<ListBox Grid.Row="2"
-									 ItemsSource="{Binding BackRoomsCollectibles}" 
-									 SelectedItem="{Binding SelectedCollectible}"
+										   <!-- Overlay Canvas - button floats absolutely, doesn't affect layout -->
+										   <Canvas Panel.ZIndex="10" IsHitTestVisible="True">
+											   <Button Content="🔍" 
+													   Click="ToggleSearchBoxes_Click"
+													   Canvas.Right="10"
+													   Canvas.Top="4"
+													   Padding="4"
+													   Background="Transparent"
+													   BorderThickness="0"
+													   Foreground="{DynamicResource PrimaryTextColor}"
+													   FontSize="14"
+													   Cursor="Hand"
+													   ToolTip="Toggle search visibility" />
+										   </Canvas>
+									   </Grid>
+
+									   <ListBox Grid.Row="2"
+												ItemsSource="{Binding BackRoomsCollectibles}" 
+												SelectedItem="{Binding SelectedCollectible}"
 									 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
 									 SelectionMode="Single"
 									 Background="{DynamicResource BackgroundColor}">
