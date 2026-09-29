@@ -24,6 +24,14 @@ public sealed class JsonStateStore
         {
             var json = File.ReadAllText(AppPaths.StateFile);
             var state = JsonSerializer.Deserialize<AppState>(json, Options) ?? new AppState();
+            state.Settings ??= new AppSettings();
+            state.Settings.CollectiblesSourceUrl = string.IsNullOrWhiteSpace(state.Settings.CollectiblesSourceUrl)
+                ? AppSettings.DefaultCollectiblesSourceUrl
+                : state.Settings.CollectiblesSourceUrl.Trim();
+            state.Settings.TickerReviewsUrl = string.IsNullOrWhiteSpace(state.Settings.TickerReviewsUrl)
+                ? AppSettings.DefaultTickerReviewsUrl
+                : state.Settings.TickerReviewsUrl.Trim();
+
             if (state.Settings.LibraryRoots.Count == 0)
             {
                 state.Settings.LibraryRoots = ReadLegacyRoots(json);
@@ -36,6 +44,30 @@ public sealed class JsonStateStore
             BackupCorruptState();
             return new AppState();
         }
+    }
+
+    public static void EnsureDefaultSources(AppState state)
+    {
+        state.Settings ??= new AppSettings();
+        state.Settings.CollectiblesSourceUrl = string.IsNullOrWhiteSpace(state.Settings.CollectiblesSourceUrl)
+            ? AppSettings.DefaultCollectiblesSourceUrl
+            : state.Settings.CollectiblesSourceUrl.Trim();
+        state.Settings.TickerReviewsUrl = string.IsNullOrWhiteSpace(state.Settings.TickerReviewsUrl)
+            ? AppSettings.DefaultTickerReviewsUrl
+            : state.Settings.TickerReviewsUrl.Trim();
+    }
+
+    public void SaveWithDefaults(AppState state)
+    {
+        EnsureDefaultSources(state);
+        Save(state);
+    }
+
+    public AppState LoadOrCreateWithDefaults()
+    {
+        var state = LoadOrCreate();
+        EnsureDefaultSources(state);
+        return state;
     }
 
     public void Save(AppState state)

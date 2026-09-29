@@ -70,61 +70,79 @@ public sealed class BackRoomsService
 	/// <summary>
 	/// Load collectible definitions from a URL or file path.
 	/// Supports http://, https://, file:// schemes, or "fallback" keyword.
-	/// Falls back to embedded fallback collectibles on failure.
+	/// Tries the configured URL first, then the repository default, then the embedded fallback set.
 	/// </summary>
-	public async Task<List<CollectibleDefinition>> LoadCollectibleDefinitionsAsync(string sourceUrl)
+	public async Task<List<CollectibleDefinition>> LoadCollectibleDefinitionsAsync(string? sourceUrl)
 	{
-		try
+		var candidateUrls = new List<string>();
+		if (!string.IsNullOrWhiteSpace(sourceUrl))
 		{
-			// Special case: "fallback" keyword immediately loads fallback collectibles
-			if (sourceUrl.Equals("fallback", StringComparison.OrdinalIgnoreCase))
+			candidateUrls.Add(sourceUrl.Trim());
+		}
+
+		if (!candidateUrls.Contains(AppSettings.DefaultCollectiblesSourceUrl, StringComparer.OrdinalIgnoreCase))
+		{
+			candidateUrls.Add(AppSettings.DefaultCollectiblesSourceUrl);
+		}
+
+		foreach (var candidate in candidateUrls.Distinct(StringComparer.OrdinalIgnoreCase))
+		{
+			if (candidate.Equals("fallback", StringComparison.OrdinalIgnoreCase))
 			{
 				System.Diagnostics.Debug.WriteLine("[BackRooms] Loading fallback collectibles (requested explicitly)");
 				return await LoadFallbackCollectiblesAsync();
 			}
 
-			string json;
+			try
+			{
+				var json = await LoadJsonFromSourceAsync(candidate);
+				if (string.IsNullOrWhiteSpace(json))
+				{
+					continue;
+				}
 
-			if (sourceUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
-			{
-				var filePath = sourceUrl.Substring(7); // Remove "file://"
-				if (File.Exists(filePath))
+				var definitions = JsonSerializer.Deserialize<List<CollectibleDefinition>>(json, JsonOptions);
+				if (definitions is not null && definitions.Count > 0)
 				{
-					json = await File.ReadAllTextAsync(filePath);
-				}
-				else
-				{
-					System.Diagnostics.Debug.WriteLine($"[BackRooms] File not found: {filePath}, loading fallback collectibles");
-					return await LoadFallbackCollectiblesAsync();
+					return definitions;
 				}
 			}
-			else if (sourceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-					 sourceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+			catch (Exception ex)
 			{
-				json = await HttpClient.GetStringAsync(sourceUrl);
+				System.Diagnostics.Debug.WriteLine($"[BackRooms] Error loading collectibles from {candidate}: {ex.Message}");
 			}
-			else
-			{
-				// Treat as local file path
-				if (File.Exists(sourceUrl))
-				{
-					json = await File.ReadAllTextAsync(sourceUrl);
-				}
-				else
-				{
-					System.Diagnostics.Debug.WriteLine($"[BackRooms] Local file not found: {sourceUrl}, loading fallback collectibles");
-					return await LoadFallbackCollectiblesAsync();
-				}
-			}
-
-			var definitions = JsonSerializer.Deserialize<List<CollectibleDefinition>>(json, JsonOptions);
-			return definitions ?? [];
 		}
-		catch (Exception ex)
+
+		System.Diagnostics.Debug.WriteLine("[BackRooms] All configured collectible sources failed, loading fallback collectibles");
+		return await LoadFallbackCollectiblesAsync();
+	}
+
+	private static async Task<string?> LoadJsonFromSourceAsync(string sourceUrl)
+	{
+		if (sourceUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
 		{
-			System.Diagnostics.Debug.WriteLine($"[BackRooms] Error loading collectibles from {sourceUrl}: {ex.Message}, loading fallback collectibles");
-			return await LoadFallbackCollectiblesAsync();
+			var filePath = sourceUrl.Substring(7);
+			if (!File.Exists(filePath))
+			{
+				return null;
+			}
+
+			return await File.ReadAllTextAsync(filePath);
 		}
+
+		if (sourceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+			sourceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+		{
+			using var client = new HttpClient();
+			return await client.GetStringAsync(sourceUrl);
+		}
+
+		if (File.Exists(sourceUrl))
+		{
+			return await File.ReadAllTextAsync(sourceUrl);
+		}
+
+		return null;
 	}
 
 	/// <summary>

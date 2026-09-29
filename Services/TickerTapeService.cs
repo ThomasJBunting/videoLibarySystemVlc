@@ -18,51 +18,72 @@ public sealed class TickerTapeService
 
 	/// <summary>
 	/// Load ticker tape reviews from a URL or file path.
-	/// Supports http://, https://, or file:// schemes.
+	/// Tries the configured URL first, then the repository default, before returning an empty list.
 	/// </summary>
-	public async Task<List<TickerReview>> LoadReviewsAsync(string sourceUrl)
+	public async Task<List<TickerReview>> LoadReviewsAsync(string? sourceUrl)
 	{
-		try
+		var candidateUrls = new List<string>();
+		if (!string.IsNullOrWhiteSpace(sourceUrl))
 		{
-			string json;
-
-			if (sourceUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
-			{
-				var filePath = sourceUrl.Substring(7); // Remove "file://"
-				if (File.Exists(filePath))
-				{
-					json = await File.ReadAllTextAsync(filePath);
-				}
-				else
-				{
-					return [];
-				}
-			}
-			else if (sourceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-					 sourceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-			{
-				json = await HttpClient.GetStringAsync(sourceUrl);
-			}
-			else
-			{
-				// Treat as local file path
-				if (File.Exists(sourceUrl))
-				{
-					json = await File.ReadAllTextAsync(sourceUrl);
-				}
-				else
-				{
-					return [];
-				}
-			}
-
-			var reviews = JsonSerializer.Deserialize<List<TickerReview>>(json, JsonOptions);
-			return reviews ?? [];
+			candidateUrls.Add(sourceUrl.Trim());
 		}
-		catch
+
+		if (!candidateUrls.Contains(AppSettings.DefaultTickerReviewsUrl, StringComparer.OrdinalIgnoreCase))
 		{
-			return [];
+			candidateUrls.Add(AppSettings.DefaultTickerReviewsUrl);
 		}
+
+		foreach (var candidate in candidateUrls.Distinct(StringComparer.OrdinalIgnoreCase))
+		{
+			try
+			{
+				var json = await LoadJsonFromSourceAsync(candidate);
+				if (string.IsNullOrWhiteSpace(json))
+				{
+					continue;
+				}
+
+				var reviews = JsonSerializer.Deserialize<List<TickerReview>>(json, JsonOptions);
+				if (reviews is not null)
+				{
+					return reviews;
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[TickerTape] Error loading reviews from {candidate}: {ex.Message}");
+			}
+		}
+
+		return [];
+	}
+
+	private static async Task<string?> LoadJsonFromSourceAsync(string sourceUrl)
+	{
+		if (sourceUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+		{
+			var filePath = sourceUrl.Substring(7);
+			if (!File.Exists(filePath))
+			{
+				return null;
+			}
+
+			return await File.ReadAllTextAsync(filePath);
+		}
+
+		if (sourceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+			sourceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+		{
+			using var client = new HttpClient();
+			return await client.GetStringAsync(sourceUrl);
+		}
+
+		if (File.Exists(sourceUrl))
+		{
+			return await File.ReadAllTextAsync(sourceUrl);
+		}
+
+		return null;
 	}
 
 	/// <summary>
