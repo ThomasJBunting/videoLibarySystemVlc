@@ -23,8 +23,171 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private readonly System.Drawing.Icon trayIconImage;
 	private readonly NotifyIcon trayIcon;
 	private readonly System.Windows.Threading.DispatcherTimer lateFeeAlertPulseTimer;
+	private readonly Random lateFeeAlertRandom = new();
+	private readonly string[] lateFeeAlertMessages =
+	[
+		"Pay Your Late Fee",
+		"Restore Your Honor",
+		"Pay the Local-Latency Tax",
+		"Out-Localize Blockbuster",
+		"Submit a Very Serious Apology",
+		"Redeem Your Rental Shame",
+		"Activate VHS Justice",
+		"Late Fee Redemption Terminal"
+	];
 	private bool lateFeeAlertColorHighContrast = false;
 	private double lateFeeAlertRotation = 0;
+	private int lateFeeAlertEffectIndex = 0;
+	private int lateFeeAlertTextIndex = 0;
+	private int lateFeeAlertShakePhase = 0;
+	private bool lateFeeAlertShaking = false;
+	private DateTime lateFeeAlertLastEffectUtc = DateTime.MinValue;
+	private const int LateFeeAlertEffectWindowMs = 1000;
+	private const int LateFeeAlertEffectTickMs = 850;
+
+	private static System.Windows.Media.Brush CreateLateFeeStripedBrush(System.Windows.Media.Color primary, System.Windows.Media.Color accent)
+	{
+		var stops = new System.Windows.Media.GradientStopCollection
+		{
+			new(primary, 0.0),
+			new(accent, 0.5),
+			new(primary, 1.0)
+		};
+
+		return new System.Windows.Media.LinearGradientBrush(stops, 45)
+		{
+			MappingMode = System.Windows.Media.BrushMappingMode.RelativeToBoundingBox,
+			SpreadMethod = System.Windows.Media.GradientSpreadMethod.Repeat
+		};
+	}
+
+	private static System.Windows.Media.Brush CreateLateFeeFlashBrush()
+	{
+		return new System.Windows.Media.LinearGradientBrush(
+			new System.Windows.Media.GradientStopCollection
+			{
+				new(System.Windows.Media.Color.FromRgb(255, 255, 68), 0.0),
+				new(System.Windows.Media.Color.FromRgb(255, 90, 90), 0.3),
+				new(System.Windows.Media.Color.FromRgb(255, 0, 0), 1.0)
+			},
+			45);
+	}
+	private void ApplyLateFeeEffect(System.Windows.Controls.Button alertButton, int effectIndex)
+	{
+		lateFeeAlertEffectIndex = effectIndex;
+		lateFeeAlertTextIndex = lateFeeAlertRandom.Next(lateFeeAlertMessages.Length);
+		alertButton.Content = lateFeeAlertMessages[lateFeeAlertTextIndex];
+		alertButton.BorderThickness = new Thickness(3);
+		alertButton.Width = 230;
+		alertButton.Height = 42;
+		alertButton.Foreground = System.Windows.Media.Brushes.White;
+
+		switch (effectIndex)
+		{
+			case 0:
+				alertButton.Background = CreateLateFeeStripedBrush(System.Windows.Media.Color.FromRgb(255, 68, 68), System.Windows.Media.Color.FromRgb(255, 201, 40));
+				alertButton.BorderBrush = System.Windows.Media.Brushes.Yellow;
+				alertButton.RenderTransform = new System.Windows.Media.RotateTransform(9);
+				break;
+			case 1:
+				alertButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38));
+				alertButton.BorderBrush = System.Windows.Media.Brushes.White;
+				alertButton.RenderTransform = new System.Windows.Media.TransformGroup
+				{
+					Children =
+					[
+						new System.Windows.Media.RotateTransform(18),
+						new System.Windows.Media.TranslateTransform(10, -6),
+						new System.Windows.Media.ScaleTransform(1.08, 1.08)
+					]
+				};
+				break;
+			case 2:
+				alertButton.Background = CreateLateFeeFlashBrush();
+				alertButton.BorderBrush = System.Windows.Media.Brushes.Orange;
+				alertButton.RenderTransform = new System.Windows.Media.TransformGroup
+				{
+					Children =
+					[
+						new System.Windows.Media.RotateTransform(-25),
+						new System.Windows.Media.ScaleTransform(1.12, 0.92)
+					]
+				};
+				break;
+			case 3:
+				alertButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(120, 20, 20));
+				alertButton.BorderBrush = System.Windows.Media.Brushes.Cyan;
+				alertButton.RenderTransform = new System.Windows.Media.TransformGroup
+				{
+					Children =
+					[
+						new System.Windows.Media.RotateTransform(32),
+						new System.Windows.Media.TranslateTransform(-6, 2),
+						new System.Windows.Media.ScaleTransform(0.96, 1.04)
+					]
+				};
+				break;
+			case 4:
+				alertButton.Background = CreateLateFeeStripedBrush(System.Windows.Media.Color.FromRgb(28, 28, 28), System.Windows.Media.Color.FromRgb(255, 202, 44));
+				alertButton.BorderBrush = System.Windows.Media.Brushes.Red;
+				alertButton.RenderTransform = new System.Windows.Media.TransformGroup
+				{
+					Children =
+					[
+						new System.Windows.Media.RotateTransform(-12),
+						new System.Windows.Media.TranslateTransform(12, 5),
+						new System.Windows.Media.ScaleTransform(1.04, 1.04)
+					]
+				};
+				break;
+			default:
+				alertButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 30, 30));
+				alertButton.BorderBrush = System.Windows.Media.Brushes.OrangeRed;
+				alertButton.RenderTransform = new System.Windows.Media.RotateTransform(lateFeeAlertRotation);
+				break;
+		}
+	}
+
+	private void ResetLateFeeAlertButtonState(System.Windows.Controls.Button alertButton)
+	{
+		alertButton.Content = "Pay Your Late Fee";
+		alertButton.Visibility = Visibility.Visible;
+		alertButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(90, 90, 90));
+		alertButton.BorderBrush = System.Windows.Media.Brushes.DarkGray;
+		alertButton.Foreground = System.Windows.Media.Brushes.White;
+		alertButton.Width = 180;
+		alertButton.Height = 32;
+		alertButton.BorderThickness = new Thickness(1);
+		alertButton.RenderTransform = new System.Windows.Media.RotateTransform(0);
+		lateFeeAlertShaking = false;
+		lateFeeAlertShakePhase = 0;
+		lateFeeAlertColorHighContrast = false;
+		lateFeeAlertRotation = 0;
+	}
+
+
+	private void LateFeeAlertPulseTimer_Tick(object? sender, EventArgs e)
+	{
+		if (!IsLateFeeReminderDue())
+		{
+			UpdateLateFeeAlertButton();
+			return;
+		}
+
+		lateFeeAlertLastEffectUtc = DateTime.UtcNow;
+		lateFeeAlertColorHighContrast = !lateFeeAlertColorHighContrast;
+		lateFeeAlertRotation = lateFeeAlertRandom.Next(-30, 31);
+		lateFeeAlertEffectIndex = lateFeeAlertRandom.Next(0, 6);
+		lateFeeAlertShaking = lateFeeAlertEffectIndex == 5;
+		lateFeeAlertShakePhase = lateFeeAlertRandom.Next(8, 18);
+
+		var alertButton = GetLateFeeAlertButton();
+		if (alertButton is not null)
+		{
+			ApplyLateFeeEffect(alertButton, lateFeeAlertEffectIndex);
+		}
+	}
+
 
 	// Back Rooms services and state
 	private readonly CollectiblesStore collectiblesStore = new();
@@ -494,47 +657,24 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         var alertDue = IsLateFeeReminderDue();
-        var baseBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(90, 90, 90));
-        var alertBrush = lateFeeAlertColorHighContrast
-            ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38))
-            : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 30, 30));
-
-        alertButton.Visibility = Visibility.Visible;
-        alertButton.Background = alertDue ? alertBrush : baseBrush;
-        alertButton.BorderBrush = alertDue ? System.Windows.Media.Brushes.OrangeRed : System.Windows.Media.Brushes.DarkGray;
-        alertButton.Foreground = System.Windows.Media.Brushes.White;
-
-        if (alertDue)
+        if (!alertDue)
         {
-            if (!lateFeeAlertPulseTimer.IsEnabled)
-            {
-                lateFeeAlertPulseTimer.Start();
-            }
-
-            alertButton.RenderTransform = new System.Windows.Media.RotateTransform(lateFeeAlertRotation);
-        }
-        else
-        {
+            ResetLateFeeAlertButtonState(alertButton);
             lateFeeAlertPulseTimer.Stop();
-            lateFeeAlertRotation = 0;
-            alertButton.RenderTransform = new System.Windows.Media.RotateTransform(0);
-        }
-    }
-
-    private void LateFeeAlertPulseTimer_Tick(object? sender, EventArgs e)
-    {
-        if (!IsLateFeeReminderDue())
-        {
-            UpdateLateFeeAlertButton();
             return;
         }
 
-        lateFeeAlertColorHighContrast = !lateFeeAlertColorHighContrast;
-        lateFeeAlertRotation = lateFeeAlertRotation == 10 ? -10 : 10;
-        UpdateLateFeeAlertButton();
+        alertButton.Visibility = Visibility.Visible;
+        if (!lateFeeAlertPulseTimer.IsEnabled)
+        {
+            lateFeeAlertPulseTimer.Start();
+        }
+
+        ApplyLateFeeEffect(alertButton, lateFeeAlertEffectIndex == 0 ? lateFeeAlertRandom.Next(0, 6) : lateFeeAlertEffectIndex);
     }
 
-    private void RefreshRootOptions()
+
+	private void RefreshRootOptions()
     {
         var seriesOptions = new ObservableCollection<LibraryRoot>
         {
