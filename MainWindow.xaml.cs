@@ -22,6 +22,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private readonly AppState appState;
 	private readonly System.Drawing.Icon trayIconImage;
 	private readonly NotifyIcon trayIcon;
+	private readonly System.Windows.Threading.DispatcherTimer lateFeeAlertPulseTimer;
+	private bool lateFeeAlertColorHighContrast = false;
+	private double lateFeeAlertRotation = 0;
 
 	// Back Rooms services and state
 	private readonly CollectiblesStore collectiblesStore = new();
@@ -81,6 +84,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		// Initialize Back Rooms
 		backRoomsState = collectiblesStore.LoadOrCreate();
 		backRoomsService = new BackRoomsService(collectiblesStore);
+		lateFeeAlertPulseTimer = new System.Windows.Threading.DispatcherTimer
+		{
+			Interval = TimeSpan.FromSeconds(5)
+		};
+		lateFeeAlertPulseTimer.Tick += LateFeeAlertPulseTimer_Tick;
 
 		DataContext = this;
 		LoadStateToUi();
@@ -387,6 +395,37 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    public int LateFeeAlertAfterDays
+    {
+        get => appState.Settings.LateFeeAlertAfterDays;
+        set
+        {
+            var normalized = Math.Max(1, value);
+            if (appState.Settings.LateFeeAlertAfterDays != normalized)
+            {
+                appState.Settings.LateFeeAlertAfterDays = normalized;
+                stateStore.Save(appState);
+                OnPropertyChanged();
+                UpdateLateFeeAlertButton();
+            }
+        }
+    }
+
+    public DateTime? LastLateFeeClickUtc
+    {
+        get => appState.Settings.LastLateFeeClickUtc;
+        set
+        {
+            if (appState.Settings.LastLateFeeClickUtc != value)
+            {
+                appState.Settings.LastLateFeeClickUtc = value;
+                stateStore.Save(appState);
+                OnPropertyChanged();
+                UpdateLateFeeAlertButton();
+            }
+        }
+    }
+
     public string? LateFeeUrl
     {
         get => appState.Settings.LateFeeUrl;
@@ -430,6 +469,69 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         RefreshRootOptions();
         RefreshVisibleItems();
         RefreshSelectedSeriesEpisodeEntries();
+        UpdateLateFeeAlertButton();
+    }
+
+    private System.Windows.Controls.Button? GetLateFeeAlertButton()
+    {
+        return FindName("LateFeeAlertButton") as System.Windows.Controls.Button;
+    }
+
+    private bool IsLateFeeReminderDue()
+    {
+        var lastClickUtc = appState.Settings.LastLateFeeClickUtc ?? DateTime.MinValue;
+        var thresholdDays = Math.Max(1, appState.Settings.LateFeeAlertAfterDays);
+        var cutoff = DateTime.UtcNow.Subtract(TimeSpan.FromDays(thresholdDays));
+        return lastClickUtc <= cutoff;
+    }
+
+    private void UpdateLateFeeAlertButton()
+    {
+        var alertButton = GetLateFeeAlertButton();
+        if (alertButton is null)
+        {
+            return;
+        }
+
+        var alertDue = IsLateFeeReminderDue();
+        var baseBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(90, 90, 90));
+        var alertBrush = lateFeeAlertColorHighContrast
+            ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 38, 38))
+            : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 30, 30));
+
+        alertButton.Visibility = Visibility.Visible;
+        alertButton.Background = alertDue ? alertBrush : baseBrush;
+        alertButton.BorderBrush = alertDue ? System.Windows.Media.Brushes.OrangeRed : System.Windows.Media.Brushes.DarkGray;
+        alertButton.Foreground = System.Windows.Media.Brushes.White;
+
+        if (alertDue)
+        {
+            if (!lateFeeAlertPulseTimer.IsEnabled)
+            {
+                lateFeeAlertPulseTimer.Start();
+            }
+
+            alertButton.RenderTransform = new System.Windows.Media.RotateTransform(lateFeeAlertRotation);
+        }
+        else
+        {
+            lateFeeAlertPulseTimer.Stop();
+            lateFeeAlertRotation = 0;
+            alertButton.RenderTransform = new System.Windows.Media.RotateTransform(0);
+        }
+    }
+
+    private void LateFeeAlertPulseTimer_Tick(object? sender, EventArgs e)
+    {
+        if (!IsLateFeeReminderDue())
+        {
+            UpdateLateFeeAlertButton();
+            return;
+        }
+
+        lateFeeAlertColorHighContrast = !lateFeeAlertColorHighContrast;
+        lateFeeAlertRotation = lateFeeAlertRotation == 10 ? -10 : 10;
+        UpdateLateFeeAlertButton();
     }
 
     private void RefreshRootOptions()
@@ -553,6 +655,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         BackRoomsGems = backRoomsState.Gems;
         BackRoomsCollectibles = new ObservableCollection<Collectible>(backRoomsState.CollectedItems);
         TickerTapeVisible = appState.Settings.TickerTapeEnabled;
+        UpdateLateFeeAlertButton();
 
         // Set up gem timer (check every minute)
         gemTimer = new System.Windows.Threading.DispatcherTimer
@@ -732,6 +835,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void PayLateFee_Click(object sender, RoutedEventArgs e)
     {
+        appState.Settings.LastLateFeeClickUtc = DateTime.UtcNow;
+        LastLateFeeClickUtc = appState.Settings.LastLateFeeClickUtc;
+        stateStore.Save(appState);
+        UpdateLateFeeAlertButton();
+
         var url = appState.Settings.LateFeeUrl ?? "https://www.google.com";
         try
         {

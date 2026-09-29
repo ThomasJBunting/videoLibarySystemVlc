@@ -42,6 +42,24 @@
 
 		<DockPanel Grid.Row="0" Margin="0,0,0,12">
 			<TextBlock Text="Video Library System VLC" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+			<Button
+				x:Name="LateFeeAlertButton"
+				Content="Pay Your Late Fee"
+				DockPanel.Dock="Right"
+				Click="PayLateFee_Click"
+				Margin="20,0,0,0"
+				Padding="12,6"
+				Width="180"
+				Foreground="White"
+				Background="#5a5a5a"
+				BorderBrush="#8a8a8a"
+				BorderThickness="1"
+				RenderTransformOrigin="0.5,0.5"
+				ToolTip="Click to pay your late fee and reset the reminder timer.">
+				<Button.RenderTransform>
+					<RotateTransform Angle="0" />
+				</Button.RenderTransform>
+			</Button>
 			<Button Content="Toggle Dark Mode" DockPanel.Dock="Right" Click="ToggleDarkMode_Click" Margin="20,0,0,0" />
 			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource SecondaryTextColor}" />
 		</DockPanel>
@@ -379,10 +397,19 @@
 
 						<!-- Ticker Tape Toggle -->
 						<CheckBox Content="Enable Ticker Tape" 
-								  IsChecked="{Binding TickerTapeVisible}" 
-								  Margin="0,0,0,16"
-								  Foreground="{DynamicResource PrimaryTextColor}"
-								  Click="TickerTapeToggle_Click" />
+							  IsChecked="{Binding TickerTapeVisible}" 
+							  Margin="0,0,0,16"
+							  Foreground="{DynamicResource PrimaryTextColor}"
+							  Click="TickerTapeToggle_Click" />
+
+						<!-- Late Fee Alert Settings -->
+						<TextBlock Text="Last late fee payment date" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />
+						<DatePicker SelectedDate="{Binding LastLateFeeClickUtc, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="220" HorizontalAlignment="Left" Margin="0,0,0,8" />
+						<StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+							<TextBlock Text="Reminder threshold: " FontSize="14" Foreground="{DynamicResource PrimaryTextColor}" VerticalAlignment="Center" />
+							<TextBox Text="{Binding LateFeeAlertAfterDays, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="8,0" Foreground="{DynamicResource PrimaryTextColor}" Background="{DynamicResource CardBackgroundColor}" />
+							<TextBlock Text="days" FontSize="14" Foreground="{DynamicResource PrimaryTextColor}" VerticalAlignment="Center" />
+						</StackPanel>
 
 						<!-- Collectibles Source URL -->
 						<TextBlock Text="Collectibles Source URL (or file path)" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />

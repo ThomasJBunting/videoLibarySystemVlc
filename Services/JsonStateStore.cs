@@ -31,6 +31,7 @@ public sealed class JsonStateStore
             state.Settings.TickerReviewsUrl = string.IsNullOrWhiteSpace(state.Settings.TickerReviewsUrl)
                 ? AppSettings.DefaultTickerReviewsUrl
                 : state.Settings.TickerReviewsUrl.Trim();
+            state.Settings.LateFeeAlertAfterDays = state.Settings.LateFeeAlertAfterDays <= 0 ? 30 : state.Settings.LateFeeAlertAfterDays;
 
             if (state.Settings.LibraryRoots.Count == 0)
             {
@@ -55,6 +56,7 @@ public sealed class JsonStateStore
         state.Settings.TickerReviewsUrl = string.IsNullOrWhiteSpace(state.Settings.TickerReviewsUrl)
             ? AppSettings.DefaultTickerReviewsUrl
             : state.Settings.TickerReviewsUrl.Trim();
+        state.Settings.LateFeeAlertAfterDays = state.Settings.LateFeeAlertAfterDays <= 0 ? 30 : state.Settings.LateFeeAlertAfterDays;
     }
 
     public void SaveWithDefaults(AppState state)

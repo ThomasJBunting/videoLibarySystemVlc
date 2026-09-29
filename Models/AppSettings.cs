@@ -12,6 +12,8 @@ public sealed class AppSettings
     public string? CollectiblesSourceUrl { get; set; } = DefaultCollectiblesSourceUrl;
     public string? TickerReviewsUrl { get; set; } = DefaultTickerReviewsUrl;
     public bool TickerTapeEnabled { get; set; } = true;
+    public int LateFeeAlertAfterDays { get; set; } = 30;
+    public DateTime? LastLateFeeClickUtc { get; set; }
     public string? LateFeeUrl { get; set; } = "https://www.google.com";
 }
 
