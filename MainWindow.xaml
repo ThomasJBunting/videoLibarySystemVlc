@@ -60,7 +60,17 @@
 					<RotateTransform Angle="0" />
 				</Button.RenderTransform>
 			</Button>
-			<Button Content="Toggle Dark Mode" DockPanel.Dock="Right" Click="ToggleDarkMode_Click" Margin="20,0,0,0" />
+			<Button
+				x:Name="DarkModeToggleButton"
+				Content="☀"
+				DockPanel.Dock="Right"
+				Click="ToggleDarkMode_Click"
+				Margin="20,0,0,0"
+				Width="42"
+				Height="32"
+				Padding="0"
+				FontSize="18"
+				ToolTip="Switch to dark mode" />
 			<TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource SecondaryTextColor}" />
 		</DockPanel>
 

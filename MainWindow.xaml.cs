@@ -33,7 +33,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		"Submit a Very Serious Apology",
 		"Redeem Your Rental Shame",
 		"Activate VHS Justice",
-		"Late Fee Redemption Terminal"
+		"Late Fee Redemption"
 	];
 	private bool lateFeeAlertColorHighContrast = false;
 	private double lateFeeAlertRotation = 0;
@@ -254,6 +254,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		lateFeeAlertPulseTimer.Tick += LateFeeAlertPulseTimer_Tick;
 
 		DataContext = this;
+		UpdateDarkModeToggleButtonIcon();
 		LoadStateToUi();
 		AutoConfigureVlcPath();
 		InitializeBackRooms();
@@ -270,6 +271,17 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		Loaded += async (_, _) => await RefreshAllAsync();
 		Closing += OnClosing;
 	}
+	private void UpdateDarkModeToggleButtonIcon()
+	{
+		if (DarkModeToggleButton == null)
+		{
+			return;
+		}
+
+		DarkModeToggleButton.Content = isDarkMode ? "☾" : "☀";
+		DarkModeToggleButton.ToolTip = isDarkMode ? "Switch to light mode" : "Switch to dark mode";
+	}
+
 	private void ToggleDarkMode_Click(object sender, RoutedEventArgs e)
 	{
 		var appResources = System.Windows.Application.Current.Resources.MergedDictionaries;
@@ -287,6 +299,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 			appResources.Add(new ResourceDictionary { Source = new Uri("ResourceDictionaries/DarkTheme.xaml", UriKind.Relative) });
 			isDarkMode = true;
 		}
+
+		UpdateDarkModeToggleButtonIcon();
 	}
 
 	private void ToggleSearchBoxes_Click(object sender, RoutedEventArgs e)
