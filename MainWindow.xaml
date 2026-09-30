@@ -624,7 +624,7 @@
 												SelectedItem="{Binding SelectedCollectible}"
 									 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
 									 SelectionMode="Single"
-									 Background="{DynamicResource BackgroundColor}">
+									 Background="{DynamicResource BackgroundColor}" d:ItemsSource="{d:SampleData ItemCount=5}">
 								<ListBox.ItemsPanel>
 									<ItemsPanelTemplate>
 										<WrapPanel IsItemsHost="True" />
@@ -673,7 +673,7 @@
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="*" />
-										<ColumnDefinition Width="200" />
+										<ColumnDefinition Width="300" />
 									</Grid.ColumnDefinitions>
 									<StackPanel>
 										<TextBlock Text="{Binding SelectedCollectible.Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
@@ -691,13 +691,13 @@
 												   Margin="0,8,0,0" />
 									</StackPanel>
 									<Border Grid.Column="1" 
-											Width="180" 
+											Width="280" 
 											Height="180" 
 											CornerRadius="8" 
 											ClipToBounds="True"
 											HorizontalAlignment="Right">
 										<Image Source="{Binding SelectedCollectible.LocalImagePath, Converter={StaticResource ImagePathConverter}}" 
-											   Stretch="UniformToFill" />
+											   Stretch="Uniform" />
 									</Border>
 								</Grid>
 							</Border>
