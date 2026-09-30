@@ -5,7 +5,10 @@ public sealed class AppSettings
     public const string DefaultCollectiblesSourceUrl = "https://raw.githubusercontent.com/ThomasJBunting/videoLibarySystemVlcJson/refs/heads/master/JSON/collectibles.json";
     public const string DefaultTickerReviewsUrl = "https://raw.githubusercontent.com/ThomasJBunting/videoLibarySystemVlcJson/refs/heads/master/JSON/reviews.json";
 
-    public List<LibraryRoot> LibraryRoots { get; set; } = [];
+    public const string DefualtLateFee = "https://ko-fi.com/videolibrarysystem";
+
+
+	public List<LibraryRoot> LibraryRoots { get; set; } = [];
     public string? VlcExecutablePath { get; set; }
 
     // Back Rooms settings
@@ -14,7 +17,7 @@ public sealed class AppSettings
     public bool TickerTapeEnabled { get; set; } = true;
     public int LateFeeAlertAfterDays { get; set; } = 30;
     public DateTime? LastLateFeeClickUtc { get; set; }
-    public string? LateFeeUrl { get; set; } = "https://www.google.com";
+    public string? LateFeeUrl { get; set; } = DefualtLateFee;
 }
 
 

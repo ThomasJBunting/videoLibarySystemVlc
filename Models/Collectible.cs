@@ -54,7 +54,43 @@ public sealed class Collectible : INotifyPropertyChanged
 	/// </summary>
 	public string? Rarity { get; set; }
 
+	/// <summary>
+	/// A multi-line list of collection dates for this item, used when the same collectible has been won on multiple dates.
+	/// </summary>
+	public string WonDatesText { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Whether this collectible has actually been obtained by the player.
+	/// Uncollected slots are shown in-place with a placeholder image and descriptive text.
+	/// </summary>
+	public bool IsCollected
+	{
+		get => isCollected;
+		set => SetField(ref isCollected, value);
+	}
+
 	public event PropertyChangedEventHandler? PropertyChanged;
+
+	private bool isCollected = true;
+
+	private static string FormatWonDate(DateTime dateTime)
+	{
+		return $"Won: {dateTime:yyyy-MM-dd HH:mm} UTC";
+	}
+
+	public void SetWonDates(IEnumerable<DateTime> wonDates)
+	{
+		var orderedDates = wonDates
+			.Where(date => date != DateTime.MinValue)
+			.Distinct()
+			.OrderBy(date => date)
+			.Select(FormatWonDate)
+			.ToList();
+
+		WonDatesText = orderedDates.Count > 0
+			? string.Join(Environment.NewLine, orderedDates)
+			: string.Empty;
+	}
 
 	private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
 	{

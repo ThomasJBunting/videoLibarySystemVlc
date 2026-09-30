@@ -12,6 +12,7 @@
 	<Window.Resources>
 		<conv:PathLeafConverter x:Key="PathLeafConverter" />
 		<conv:ImagePathConverter x:Key="ImagePathConverter" />
+		<conv:CollectibleImageConverter x:Key="CollectibleImageConverter" />
 		<conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
 		<conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
@@ -641,7 +642,14 @@
 										<Border Width="250" Height="380" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="{DynamicResource CardBackgroundColor}" Padding="10">
 											<StackPanel>
 												<Border Height="280" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True">
-													<Image Source="{Binding LocalImagePath, Converter={StaticResource ImagePathConverter}}" Stretch="UniformToFill" />
+													<Image Stretch="UniformToFill" HorizontalAlignment="Center">
+														<Image.Source>
+															<MultiBinding Converter="{StaticResource CollectibleImageConverter}">
+																<Binding Path="LocalImagePath" />
+																<Binding Path="IsCollected" />
+															</MultiBinding>
+														</Image.Source>
+													</Image>
 												</Border>
 												<TextBlock Text="{Binding Name}" 
 														   FontWeight="SemiBold" 
@@ -682,13 +690,18 @@
 												   Foreground="{DynamicResource AccentColor}" 
 												   Margin="0,4,0,8" />
 										<TextBlock Text="{Binding SelectedCollectible.Description}" 
-												   TextWrapping="Wrap" 
-												   Foreground="{DynamicResource PrimaryTextColor}"
-												   Margin="0,8,0,0" />
-										<TextBlock Text="{Binding SelectedCollectible.WonDateUtc, StringFormat=Won: \{0:yyyy-MM-dd HH:mm\} UTC}" 
-												   FontSize="11" 
-												   Foreground="{DynamicResource SecondaryTextColor}"
-												   Margin="0,8,0,0" />
+										   TextWrapping="Wrap" 
+										   Foreground="{DynamicResource PrimaryTextColor}"
+										   Margin="0,8,0,0" />
+										<Border MaxHeight="90" Margin="0,8,0,0">
+											<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+												<TextBlock Text="{Binding SelectedCollectible.WonDatesText}" 
+													   FontSize="11" 
+													   Foreground="{DynamicResource SecondaryTextColor}"
+													   TextWrapping="Wrap"
+													   Width="Auto" />
+											</ScrollViewer>
+										</Border>
 									</StackPanel>
 									<Border Grid.Column="1" 
 											Width="280" 
@@ -696,9 +709,15 @@
 											CornerRadius="8" 
 											ClipToBounds="True"
 											HorizontalAlignment="Right">
-										<Image Source="{Binding SelectedCollectible.LocalImagePath, Converter={StaticResource ImagePathConverter}}" 
-											   Stretch="Uniform" />
-									</Border>
+											<Image Stretch="Uniform">
+												<Image.Source>
+													<MultiBinding Converter="{StaticResource CollectibleImageConverter}">
+														<Binding Path="SelectedCollectible.LocalImagePath" />
+														<Binding Path="SelectedCollectible.IsCollected" />
+													</MultiBinding>
+												</Image.Source>
+											</Image>
+										</Border>
 								</Grid>
 							</Border>
 						</Grid>

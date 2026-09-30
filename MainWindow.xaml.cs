@@ -771,8 +771,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void RefreshVisibleCollectibles()
     {
-        var filtered = backRoomsState.CollectedItems
-            .Where(collectible => MatchesSearchQuery(collectible.Name, CollectiblesSearchText))
+        var allCollectibles = BuildCollectedDisplayList();
+        var filtered = allCollectibles
+            .Where(collectible => string.IsNullOrWhiteSpace(CollectiblesSearchText)
+                || MatchesSearchQuery(collectible.Name, CollectiblesSearchText)
+                || MatchesSearchQuery(collectible.Description, CollectiblesSearchText)
+                || MatchesSearchQuery(collectible.Id, CollectiblesSearchText))
             .ToList();
 
         BackRoomsCollectibles = new ObservableCollection<Collectible>(filtered);
@@ -781,6 +785,121 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             SelectedCollectible = BackRoomsCollectibles.FirstOrDefault();
         }
+    }
+
+    private List<Collectible> BuildCollectedDisplayList()
+    {
+        var displayList = new List<Collectible>();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (availableCollectibles.Count == 0)
+        {
+            foreach (var grouped in backRoomsState.CollectedItems
+                .GroupBy(item => GetCollectibleGroupKey(item), StringComparer.OrdinalIgnoreCase))
+            {
+                var representative = grouped.First();
+                representative.IsCollected = true;
+                representative.SetWonDates(grouped.Select(item => item.WonDateUtc));
+                displayList.Add(representative);
+            }
+
+            return displayList;
+        }
+
+        foreach (var definition in availableCollectibles)
+        {
+            var key = GetCollectibleGroupKey(definition);
+            if (seenKeys.Contains(key))
+            {
+                continue;
+            }
+
+            seenKeys.Add(key);
+
+            var matchingCollected = backRoomsState.CollectedItems
+                .Where(item => string.Equals(GetCollectibleGroupKey(item), key, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (matchingCollected.Count > 0)
+            {
+                var representative = matchingCollected.First();
+                representative.IsCollected = true;
+                representative.SetWonDates(matchingCollected.Select(item => item.WonDateUtc));
+                displayList.Add(representative);
+                continue;
+            }
+
+            displayList.Add(CreateUncollectedCollectible(definition));
+        }
+
+        var extraCollected = backRoomsState.CollectedItems
+            .Where(item => !availableCollectibles.Any(definition =>
+                string.Equals(GetCollectibleGroupKey(definition), GetCollectibleGroupKey(item), StringComparison.OrdinalIgnoreCase)))
+            .GroupBy(item => GetCollectibleGroupKey(item), StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var grouped in extraCollected)
+        {
+            var key = grouped.Key;
+            if (seenKeys.Contains(key))
+            {
+                continue;
+            }
+
+            seenKeys.Add(key);
+
+            var representative = grouped.First();
+            representative.IsCollected = true;
+            representative.SetWonDates(grouped.Select(item => item.WonDateUtc));
+            displayList.Add(representative);
+        }
+
+        foreach (var collectible in displayList)
+        {
+            if (collectible.IsCollected && string.IsNullOrWhiteSpace(collectible.WonDatesText))
+            {
+                collectible.SetWonDates(new[] { collectible.WonDateUtc });
+            }
+        }
+
+        return displayList;
+    }
+
+    private static string GetCollectibleGroupKey(Collectible collectible)
+    {
+        return !string.IsNullOrWhiteSpace(collectible.Id)
+            ? collectible.Id
+            : collectible.Name;
+    }
+
+    private static string GetCollectibleGroupKey(CollectibleDefinition definition)
+    {
+        return !string.IsNullOrWhiteSpace(definition.Id)
+            ? definition.Id
+            : definition.Name;
+    }
+
+    private static Collectible CreateUncollectedCollectible(CollectibleDefinition definition)
+    {
+        var placeholderPaths = new[]
+        {
+            "pack://application:,,,/Images/mascoss/BaseNoSas.jpg",
+            "pack://application:,,,/Images/mascoss/mascost.jpg"
+        };
+
+        var placeholderIndex = Math.Abs(definition.Id.GetHashCode()) % placeholderPaths.Length;
+
+        return new Collectible
+        {
+            Id = definition.Id,
+            Name = "Uncollected",
+            Description = $"You haven't collected {definition.Name} yet.",
+            LocalImagePath = placeholderPaths[placeholderIndex],
+            OriginalImageUrl = definition.ImageUrl,
+            WonDateUtc = DateTime.MinValue,
+            Rarity = "Unknown",
+            IsCollected = false
+        };
     }
 
     private void AutoConfigureVlcPath()
@@ -915,6 +1034,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                         : "No collectibles configured. Set the URL in settings.";
                 }
             }
+
+            RefreshVisibleCollectibles();
 
             // Load ticker tape reviews
             var tickerUrl = appState.Settings.TickerReviewsUrl;
