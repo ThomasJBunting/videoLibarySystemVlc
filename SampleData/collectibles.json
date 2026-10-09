@@ -1,98 +1,142 @@
-[
-  {
-	"id": "pokemon-001",
-	"name": "Bulbasaur Card",
-	"description": "The Seed Pokémon. A strange seed was planted on its back at birth.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
-	"dropWeight": 30,
-	"rarity": "Common"
-  },
-  {
-	"id": "pokemon-004",
-	"name": "Charmander Card",
-	"description": "The Lizard Pokémon. The flame on its tail indicates its emotions.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png",
-	"dropWeight": 30,
-	"rarity": "Common"
-  },
-  {
-	"id": "pokemon-007",
-	"name": "Squirtle Card",
-	"description": "The Tiny Turtle Pokémon. Withdraws into its shell to protect itself.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
-	"dropWeight": 30,
-	"rarity": "Common"
-  },
-  {
-	"id": "pokemon-025",
-	"name": "Pikachu Card",
-	"description": "The Mouse Pokémon. It can generate electric attacks from the electric sacs in its cheeks.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
-	"dropWeight": 25,
-	"rarity": "Uncommon"
-  },
-  {
-	"id": "pokemon-143",
-	"name": "Snorlax Card",
-	"description": "The Sleeping Pokémon. Very lazy. Just eats and sleeps. Its enormous belly makes all moves slower.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
-	"dropWeight": 20,
-	"rarity": "Uncommon"
-  },
-  {
-	"id": "pokemon-094",
-	"name": "Gengar Card",
-	"description": "The Shadow Pokémon. Hides in shadows and drains the warmth from the room.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png",
-	"dropWeight": 10,
-	"rarity": "Rare"
-  },
-  {
-	"id": "pokemon-150",
-	"name": "Mewtwo Card",
-	"description": "The Genetic Pokémon. Created from modified Mew genes. A savage Pokémon.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
-	"dropWeight": 8,
-	"rarity": "Rare"
-  },
-  {
-	"id": "pokemon-006",
-	"name": "Charizard Card",
-	"description": "The Flame Pokémon. Its fiery breath can melt anything. Spits fire hot enough to melt boulders.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
-	"dropWeight": 5,
-	"rarity": "Epic"
-  },
-  {
-	"id": "pokemon-130",
-	"name": "Gyarados Card",
-	"description": "The Atrocious Pokémon. Rarely seen in the wild. Huge and vicious, capable of destroying cities.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/130.png",
-	"dropWeight": 5,
-	"rarity": "Epic"
-  },
-  {
-	"id": "pokemon-149",
-	"name": "Dragonite Card",
-	"description": "The Dragon Pokémon. An extremely rare and intelligent Pokémon that can fly faster than any jet.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/149.png",
-	"dropWeight": 5,
-	"rarity": "Epic"
-  },
-  {
-	"id": "pokemon-249",
-	"name": "Lugia Card",
-	"description": "The Diving Pokémon. A legendary bird said to cause storms by flapping its wings.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/249.png",
-	"dropWeight": 2,
-	"rarity": "Legendary"
-  },
-  {
-	"id": "pokemon-448",
-	"name": "Lucario Card",
-	"description": "The Aura Pokémon. A Pokémon that can sense and control auras of all things.",
-	"imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/448.png",
-	"dropWeight": 8,
-	"rarity": "Rare"
-  }
-]
+{
+  "collectibles": [
+	{
+	  "id": "pokemon-001",
+	  "name": "Bulbasaur Card",
+	  "description": "The Seed Pokémon. A strange seed was planted on its back at birth.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+	  "dropWeight": 30,
+	  "rarity": "Common"
+	},
+	{
+	  "id": "pokemon-004",
+	  "name": "Charmander Card",
+	  "description": "The Lizard Pokémon. The flame on its tail indicates its emotions.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png",
+	  "dropWeight": 30,
+	  "rarity": "Common"
+	},
+	{
+	  "id": "pokemon-007",
+	  "name": "Squirtle Card",
+	  "description": "The Tiny Turtle Pokémon. Withdraws into its shell to protect itself.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+	  "dropWeight": 30,
+	  "rarity": "Common"
+	},
+	{
+	  "id": "pokemon-025",
+	  "name": "Pikachu Card",
+	  "description": "The Mouse Pokémon. It can generate electric attacks from the electric sacs in its cheeks.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+	  "dropWeight": 25,
+	  "rarity": "Uncommon"
+	},
+	{
+	  "id": "pokemon-143",
+	  "name": "Snorlax Card",
+	  "description": "The Sleeping Pokémon. Very lazy. Just eats and sleeps. Its enormous belly makes all moves slower.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+	  "dropWeight": 20,
+	  "rarity": "Uncommon"
+	},
+	{
+	  "id": "pokemon-094",
+	  "name": "Gengar Card",
+	  "description": "The Shadow Pokémon. Hides in shadows and drains the warmth from the room.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png",
+	  "dropWeight": 10,
+	  "rarity": "Rare"
+	},
+	{
+	  "id": "pokemon-150",
+	  "name": "Mewtwo Card",
+	  "description": "The Genetic Pokémon. Created from modified Mew genes. A savage Pokémon.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+	  "dropWeight": 8,
+	  "rarity": "Rare"
+	},
+	{
+	  "id": "pokemon-006",
+	  "name": "Charizard Card",
+	  "description": "The Flame Pokémon. Its fiery breath can melt anything. Spits fire hot enough to melt boulders.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+	  "dropWeight": 5,
+	  "rarity": "Epic"
+	},
+	{
+	  "id": "pokemon-130",
+	  "name": "Gyarados Card",
+	  "description": "The Atrocious Pokémon. Rarely seen in the wild. Huge and vicious, capable of destroying cities.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/130.png",
+	  "dropWeight": 5,
+	  "rarity": "Epic"
+	},
+	{
+	  "id": "pokemon-149",
+	  "name": "Dragonite Card",
+	  "description": "The Dragon Pokémon. An extremely rare and intelligent Pokémon that can fly faster than any jet.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/149.png",
+	  "dropWeight": 5,
+	  "rarity": "Epic"
+	},
+	{
+	  "id": "pokemon-249",
+	  "name": "Lugia Card",
+	  "description": "The Diving Pokémon. A legendary bird said to cause storms by flapping its wings.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/249.png",
+	  "dropWeight": 2,
+	  "rarity": "Legendary"
+	},
+	{
+	  "id": "pokemon-448",
+	  "name": "Lucario Card",
+	  "description": "The Aura Pokémon. A Pokémon that can sense and control auras of all things.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/448.png",
+	  "dropWeight": 8,
+	  "rarity": "Rare"
+	}
+  ],
+  "themes": [
+	{
+	  "id": "Retro",
+	  "name": "Retro 90s",
+	  "description": "Neon-soaked nostalgia from the 1990s. Vibrant colors, bold gradients, and that unmistakable retro vibe. Perfect for video enthusiasts who remember the glory days of CRT monitors and VHS.",
+	  "iconGlyph": "◉",
+	  "dropWeight": 15,
+	  "rarity": "Uncommon",
+	  "isDark": true,
+	  "resourceUri": "/ResourceDictionaries/RetroTheme.xaml",
+	  "imageUrl": null,
+	  "relatedImageUrls": null,
+	  "themeData": {
+		"accentColor": "#FF00FF",
+		"secondaryColor": "#00FFFF",
+		"style": "cyberpunk"
+	  }
+	},
+	{
+	  "id": "wood-panel",
+	  "name": "Wood Panel",
+	  "description": "Brings the warm, natural aesthetic of wood paneling to your video library. Inspired by retro home entertainment systems with beautiful wood grain textures and warm tones.",
+	  "iconGlyph": "🌳",
+	  "dropWeight": 12,
+	  "rarity": "Uncommon",
+	  "isDark": true,
+	  "resourceUri": "/ResourceDictionaries/WoodPanelTheme.xaml",
+	  "imageUrl": "https://example.com/images/wood-panel-preview.jpg",
+	  "relatedImageUrls": [
+		"https://example.com/images/wood-grain-dark.jpg",
+		"https://example.com/images/wood-grain-light.jpg",
+		"https://example.com/images/wood-panel-texture.jpg"
+	  ],
+	  "themeData": {
+		"woodTone": "dark-walnut",
+		"grainPattern": "natural",
+		"primaryColor": "#8B4513",
+		"accentColor": "#D2B48C",
+		"style": "wood-veneer"
+	  }
+	}
+  ]
+}

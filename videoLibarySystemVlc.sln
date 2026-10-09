@@ -1,8 +1,54 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.11.12224.323
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoLibrarySystemVlc", "VideoLibrarySystemVlc.csproj", "{9C1C7A7D-2A50-4F3F-9D4B-7E2E5D6E9D72}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VLSJson", "VLSJson", "{6780F48F-B3BA-484A-9A59-066079EBED76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Json", "Json", "{6D37022A-89D1-4946-8627-D0CCFBB0F969}"
+	ProjectSection(SolutionItems) = preProject
+		..\videoLibarySystemVlcJson\JSON\collectibles.json = ..\videoLibarySystemVlcJson\JSON\collectibles.json
+		..\videoLibarySystemVlcJson\JSON\reviews.json = ..\videoLibarySystemVlcJson\JSON\reviews.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{0078A0D3-19C5-4620-88C2-0601928AFF47}"
+	ProjectSection(SolutionItems) = preProject
+		..\videoLibarySystemVlcJson\Image\744cf7c2-7d63-46a5-8fd8-dbf3fb668509.jpg = ..\videoLibarySystemVlcJson\Image\744cf7c2-7d63-46a5-8fd8-dbf3fb668509.jpg
+		..\videoLibarySystemVlcJson\Image\BaseNoSas.jpg = ..\videoLibarySystemVlcJson\Image\BaseNoSas.jpg
+		..\videoLibarySystemVlcJson\Image\cape.jpg = ..\videoLibarySystemVlcJson\Image\cape.jpg
+		..\videoLibarySystemVlcJson\Image\cowboy.jpg = ..\videoLibarySystemVlcJson\Image\cowboy.jpg
+		..\videoLibarySystemVlcJson\Image\forist gump.jpg = ..\videoLibarySystemVlcJson\Image\forist gump.jpg
+		..\videoLibarySystemVlcJson\Image\francinsine.jpg = ..\videoLibarySystemVlcJson\Image\francinsine.jpg
+		..\videoLibarySystemVlcJson\Image\ganddalf.jpg = ..\videoLibarySystemVlcJson\Image\ganddalf.jpg
+		..\videoLibarySystemVlcJson\Image\Gemini_Generated_Image_6nxwcq6nxwcq6nxw.jpg = ..\videoLibarySystemVlcJson\Image\Gemini_Generated_Image_6nxwcq6nxwcq6nxw.jpg
+		..\videoLibarySystemVlcJson\Image\Gemini_Generated_Image_rf1ne1rf1ne1rf1n.jpg = ..\videoLibarySystemVlcJson\Image\Gemini_Generated_Image_rf1ne1rf1ne1rf1n.jpg
+		..\videoLibarySystemVlcJson\Image\ghost.jpg = ..\videoLibarySystemVlcJson\Image\ghost.jpg
+		..\videoLibarySystemVlcJson\Image\grinch.jpg = ..\videoLibarySystemVlcJson\Image\grinch.jpg
+		..\videoLibarySystemVlcJson\Image\India.jpg = ..\videoLibarySystemVlcJson\Image\India.jpg
+		..\videoLibarySystemVlcJson\Image\Ironman.jpg = ..\videoLibarySystemVlcJson\Image\Ironman.jpg
+		..\videoLibarySystemVlcJson\Image\jedi.jpg = ..\videoLibarySystemVlcJson\Image\jedi.jpg
+		..\videoLibarySystemVlcJson\Image\joker.jpg = ..\videoLibarySystemVlcJson\Image\joker.jpg
+		..\videoLibarySystemVlcJson\Image\Karate.jpg = ..\videoLibarySystemVlcJson\Image\Karate.jpg
+		..\videoLibarySystemVlcJson\Image\mascost.jpg = ..\videoLibarySystemVlcJson\Image\mascost.jpg
+		..\videoLibarySystemVlcJson\Image\mascost2.jpg = ..\videoLibarySystemVlcJson\Image\mascost2.jpg
+		..\videoLibarySystemVlcJson\Image\mascost3.jpg = ..\videoLibarySystemVlcJson\Image\mascost3.jpg
+		..\videoLibarySystemVlcJson\Image\mascost4.jpg = ..\videoLibarySystemVlcJson\Image\mascost4.jpg
+		..\videoLibarySystemVlcJson\Image\matrix.jpg = ..\videoLibarySystemVlcJson\Image\matrix.jpg
+		..\videoLibarySystemVlcJson\Image\mummy.jpg = ..\videoLibarySystemVlcJson\Image\mummy.jpg
+		..\videoLibarySystemVlcJson\Image\oger.jpg = ..\videoLibarySystemVlcJson\Image\oger.jpg
+		..\videoLibarySystemVlcJson\Image\pan.jpg = ..\videoLibarySystemVlcJson\Image\pan.jpg
+		..\videoLibarySystemVlcJson\Image\pirat.jpg = ..\videoLibarySystemVlcJson\Image\pirat.jpg
+		..\videoLibarySystemVlcJson\Image\powers.jpg = ..\videoLibarySystemVlcJson\Image\powers.jpg
+		..\videoLibarySystemVlcJson\Image\rambo.jpg = ..\videoLibarySystemVlcJson\Image\rambo.jpg
+		..\videoLibarySystemVlcJson\Image\rokky.jpg = ..\videoLibarySystemVlcJson\Image\rokky.jpg
+		..\videoLibarySystemVlcJson\Image\rokky2.jpg = ..\videoLibarySystemVlcJson\Image\rokky2.jpg
+		..\videoLibarySystemVlcJson\Image\sith.jpg = ..\videoLibarySystemVlcJson\Image\sith.jpg
+		..\videoLibarySystemVlcJson\Image\terminator.jpg = ..\videoLibarySystemVlcJson\Image\terminator.jpg
+		..\videoLibarySystemVlcJson\Image\turtle.jpg = ..\videoLibarySystemVlcJson\Image\turtle.jpg
+		..\videoLibarySystemVlcJson\Image\vamp.jpg = ..\videoLibarySystemVlcJson\Image\vamp.jpg
+		..\videoLibarySystemVlcJson\Image\willam.jpg = ..\videoLibarySystemVlcJson\Image\willam.jpg
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,5 +60,15 @@ Global
 		{9C1C7A7D-2A50-4F3F-9D4B-7E2E5D6E9D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C1C7A7D-2A50-4F3F-9D4B-7E2E5D6E9D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C1C7A7D-2A50-4F3F-9D4B-7E2E5D6E9D72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6D37022A-89D1-4946-8627-D0CCFBB0F969} = {6780F48F-B3BA-484A-9A59-066079EBED76}
+		{0078A0D3-19C5-4620-88C2-0601928AFF47} = {6780F48F-B3BA-484A-9A59-066079EBED76}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BC3B0617-2068-4042-B4ED-44AA07BBED6E}
 	EndGlobalSection
 EndGlobal

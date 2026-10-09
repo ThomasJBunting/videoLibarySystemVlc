@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -13,9 +13,6 @@
   <ItemGroup>
     <None Remove="Images\mascoss\BaseNoSas.jpg" />
     <None Remove="Images\mascoss\mascost.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ResourceDictionaries\" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\mascoss\BaseNoSas.jpg" />

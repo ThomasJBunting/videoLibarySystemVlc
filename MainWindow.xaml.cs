@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using VideoLibrarySystemVlc.Models;
 using VideoLibrarySystemVlc.Services;
+using VideoLibrarySystemVlc.Themes;
 
 namespace VideoLibrarySystemVlc;
 
@@ -220,7 +221,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private string statusText = "Ready.";
 	private string vlcExecutablePath = string.Empty;
 	private string vlcPathStatus = string.Empty;
-	private bool isDarkMode = false;
+	private AppThemeId currentThemeId = AppThemeId.Light;
+	private readonly AppThemeId[] themeCycle =
+	[
+		AppThemeId.Light,
+		AppThemeId.Dark,
+		AppThemeId.Retro
+	];
 	private bool searchBoxesVisible = false;
 
 	// Search properties
@@ -234,6 +241,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private int backRoomsGems = 0;
 	private string tickerTapeText = string.Empty;
 	private bool tickerTapeVisible = true;
+
+	// Theme properties
+	private ObservableCollection<ThemeDefinition> availableThemesList = [];
+	private ThemeDefinition? selectedTheme;
 	public MainWindow()
 	{
 		InitializeComponent();
@@ -254,7 +265,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		lateFeeAlertPulseTimer.Tick += LateFeeAlertPulseTimer_Tick;
 
 		DataContext = this;
-		UpdateDarkModeToggleButtonIcon();
+
+		// Load and apply theme from state
+		var themeState = backRoomsState.ThemeState;
+		var themeToApply = ThemeManager.GetThemeByName(themeState.CurrentThemeId);
+		ApplyTheme(themeToApply.Id);
+
 		LoadStateToUi();
 		AutoConfigureVlcPath();
 		InitializeBackRooms();
@@ -271,6 +287,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		Loaded += async (_, _) => await RefreshAllAsync();
 		Closing += OnClosing;
 	}
+	private void ApplyTheme(AppThemeId themeId)
+	{
+		currentThemeId = themeId;
+		ThemeManager.ApplyAndUpdateState(themeId, backRoomsState.ThemeState);
+		collectiblesStore.Save(backRoomsState);
+		UpdateDarkModeToggleButtonIcon();
+	}
+
+	private void CycleTheme()
+	{
+		var currentIndex = Array.IndexOf(themeCycle, currentThemeId);
+		var nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % themeCycle.Length;
+		ApplyTheme(themeCycle[nextIndex]);
+	}
+
 	private void UpdateDarkModeToggleButtonIcon()
 	{
 		if (DarkModeToggleButton == null)
@@ -278,29 +309,64 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 			return;
 		}
 
-		DarkModeToggleButton.Content = isDarkMode ? "☾" : "☀";
-		DarkModeToggleButton.ToolTip = isDarkMode ? "Switch to light mode" : "Switch to dark mode";
+		var currentTheme = ThemeManager.GetTheme(currentThemeId);
+		var nextTheme = ThemeManager.GetTheme(ThemeManager.GetNextTheme(currentThemeId));
+		DarkModeToggleButton.Content = currentTheme.IconGlyph;
+		DarkModeToggleButton.ToolTip = $"Switch theme ({nextTheme.Name})";
 	}
 
 	private void ToggleDarkMode_Click(object sender, RoutedEventArgs e)
 	{
-		var appResources = System.Windows.Application.Current.Resources.MergedDictionaries;
-		if (isDarkMode)
+		CycleTheme();
+	}
+
+	private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+	{
+		// Toggle between current and previous theme
+		var toggleThemeId = ThemeManager.GetToggleTheme(backRoomsState.ThemeState);
+		ApplyTheme(toggleThemeId);
+
+		// Update the selected theme in UI
+		var toggleTheme = ThemeManager.GetTheme(toggleThemeId);
+		SelectedTheme = toggleTheme;
+	}
+
+	private void ThemeDropdownButton_Click(object sender, RoutedEventArgs e)
+	{
+		// The popup will be controlled via XAML binding instead
+		// Just ensure the UI reflects current selection
+	}
+
+	private void ThemeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+	{
+		if (sender is not System.Windows.Controls.ListBox listBox || listBox.SelectedItem is not ThemeDefinition theme)
 		{
-			// Switch to Light Theme
-			appResources.Clear();
-			appResources.Add(new ResourceDictionary { Source = new Uri("ResourceDictionaries/LightTheme.xaml", UriKind.Relative) });
-			isDarkMode = false;
-		}
-		else
-		{
-			// Switch to Dark Theme
-			appResources.Clear();
-			appResources.Add(new ResourceDictionary { Source = new Uri("ResourceDictionaries/DarkTheme.xaml", UriKind.Relative) });
-			isDarkMode = true;
+			return;
 		}
 
-		UpdateDarkModeToggleButtonIcon();
+		ApplyTheme(theme.Id);
+		SelectedTheme = theme;
+	}
+
+	private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+	{
+		if (sender is not System.Windows.Controls.ComboBox comboBox || comboBox.SelectedItem is not ThemeDefinition theme)
+		{
+			return;
+		}
+
+		ApplyTheme(theme.Id);
+		SelectedTheme = theme;
+	}
+
+	private void ApplySelectedTheme_Click(object sender, RoutedEventArgs e)
+	{
+		if (SelectedTheme is null)
+		{
+			return;
+		}
+
+		ApplyTheme(SelectedTheme.Id);
 	}
 
 	private void ToggleSearchBoxes_Click(object sender, RoutedEventArgs e)
@@ -508,6 +574,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
             }
         }
+    }
+
+    public ObservableCollection<ThemeDefinition> AvailableThemesList
+    {
+        get => availableThemesList;
+        set => SetField(ref availableThemesList, value);
+    }
+
+    public ThemeDefinition? SelectedTheme
+    {
+        get => selectedTheme;
+        set => SetField(ref selectedTheme, value);
     }
 
     public string SeriesSearchText
@@ -928,6 +1006,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         BackRoomsGems = backRoomsState.Gems;
         BackRoomsCollectibles = new ObservableCollection<Collectible>(backRoomsState.CollectedItems);
         TickerTapeVisible = appState.Settings.TickerTapeEnabled;
+
+        // Initialize themes
+        AvailableThemesList = new ObservableCollection<ThemeDefinition>(ThemeManager.AvailableThemes);
+        var currentTheme = ThemeManager.GetThemeByName(backRoomsState.ThemeState.CurrentThemeId);
+        SelectedTheme = currentTheme;
+
         UpdateLateFeeAlertButton();
 
         // Set up gem timer (check every minute)
@@ -1084,13 +1168,78 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             if (wonCollectible != null)
             {
                 BackRoomsGems = backRoomsState.Gems;
-                BackRoomsCollectibles.Add(wonCollectible);
-                SelectedCollectible = wonCollectible;
 
-                System.Windows.MessageBox.Show($"Congratulations! You won:\n\n{wonCollectible.Name}\n\n{wonCollectible.Description}", 
-                    "Loot Crate Opened!", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Check if this collectible ID already exists in the collection
+                var existingCollectible = backRoomsState.CollectedItems
+                    .FirstOrDefault(c => string.Equals(c.Id, wonCollectible.Id, StringComparison.OrdinalIgnoreCase));
 
-                StatusText = $"Opened loot crate and won: {wonCollectible.Name}";
+                if (existingCollectible != null)
+                {
+                    // Duplicate: add the won date to the existing collectible
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Duplicate won: {wonCollectible.Name}. Updating existing entry.");
+                    var existingDates = new List<DateTime>();
+                    if (!string.IsNullOrWhiteSpace(existingCollectible.WonDatesText))
+                    {
+                        // Parse existing dates (they're in format "Won: yyyy-MM-dd HH:mm UTC")
+                        existingDates = existingCollectible.WonDatesText
+                            .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
+                            .Select(line =>
+                            {
+                                const string datePrefix = "Won: ";
+                                if (line.StartsWith(datePrefix))
+                                {
+                                    var dateStr = line.Substring(datePrefix.Length).Replace(" UTC", "");
+                                    if (DateTime.TryParse(dateStr, out var date))
+                                    {
+                                        return date;
+                                    }
+                                }
+                                return DateTime.MinValue;
+                            })
+                            .Where(d => d != DateTime.MinValue)
+                            .ToList();
+                    }
+
+                    // Add the new won date
+                    existingDates.Add(wonCollectible.WonDateUtc);
+
+                    // Update the existing collectible with all won dates
+                    existingCollectible.SetWonDates(existingDates);
+
+                    // Refresh the display to reorder and show updates
+                    RefreshVisibleCollectibles();
+
+                    // Find the collectible in the display list and select it
+                    var displayedCollectible = BackRoomsCollectibles
+                        .FirstOrDefault(c => string.Equals(c.Id, wonCollectible.Id, StringComparison.OrdinalIgnoreCase));
+                    if (displayedCollectible != null)
+                    {
+                        SelectedCollectible = displayedCollectible;
+                    }
+
+                    System.Windows.MessageBox.Show($"Duplicate! You already had:\n\n{wonCollectible.Name}\n\n{wonCollectible.Description}\n\nYour collection has been updated.", 
+                        "Duplicate Item", MessageBoxButton.OK, MessageBoxImage.Information);
+                    StatusText = $"Opened loot crate and found duplicate: {wonCollectible.Name}";
+                }
+                else
+                {
+                    // New collectible: add it normally and refresh display
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] New collectible: {wonCollectible.Name}");
+                    RefreshVisibleCollectibles();
+
+                    // Find and select the newly added collectible in the display
+                    var displayedCollectible = BackRoomsCollectibles
+                        .FirstOrDefault(c => string.Equals(c.Id, wonCollectible.Id, StringComparison.OrdinalIgnoreCase));
+                    if (displayedCollectible != null)
+                    {
+                        SelectedCollectible = displayedCollectible;
+                    }
+
+                    System.Windows.MessageBox.Show($"Congratulations! You won:\n\n{wonCollectible.Name}\n\n{wonCollectible.Description}", 
+                        "Loot Crate Opened!", MessageBoxButton.OK, MessageBoxImage.Information);
+                    StatusText = $"Opened loot crate and won: {wonCollectible.Name}";
+                }
+
                 System.Diagnostics.Debug.WriteLine($"[MainWindow] Successfully won: {wonCollectible.Name}");
             }
             else
@@ -1141,7 +1290,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var selectedIndex = BackRoomsSectionList.SelectedIndex;
 
         CollectiblesSection.Visibility = selectedIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
-        LootCrateInfoSection.Visibility = selectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        ThemesSection.Visibility = selectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        LootCrateInfoSection.Visibility = selectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void GemCountTextBox_LostFocus(object sender, RoutedEventArgs e)

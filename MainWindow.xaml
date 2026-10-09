@@ -61,6 +61,23 @@
 					<RotateTransform Angle="0" />
 				</Button.RenderTransform>
 			</Button>
+			<ComboBox
+				x:Name="ThemeSelector"
+				DockPanel.Dock="Right"
+				ItemsSource="{Binding AvailableThemesList}"
+				SelectedItem="{Binding SelectedTheme}"
+				SelectionChanged="ThemeSelector_SelectionChanged"
+				Margin="20,0,0,0"
+				Width="150"
+				Height="32"
+				Padding="8,6"
+				ToolTip="Select a theme">
+				<ComboBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding Name}" Foreground="{DynamicResource PrimaryTextColor}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
 			<Button
 				x:Name="DarkModeToggleButton"
 				Content="☀"
@@ -557,6 +574,7 @@
 								 Height="200"
 								 SelectionChanged="BackRoomsSectionList_SelectionChanged">
 							<ListBoxItem Content="Collectibles" />
+							<ListBoxItem Content="Themes" />
 							<ListBoxItem Content="Loot Crate Info" />
 						</ListBox>
 
@@ -718,6 +736,121 @@
 												</Image.Source>
 											</Image>
 										</Border>
+								</Grid>
+							</Border>
+						</Grid>
+
+						<!-- Themes Section -->
+						<Grid x:Name="ThemesSection" Visibility="Collapsed">
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+								<RowDefinition Height="Auto" />
+							</Grid.RowDefinitions>
+
+							<TextBlock Text="Theme Settings" 
+									   FontSize="20" 
+									   FontWeight="SemiBold" 
+									   Margin="0,0,0,12"
+									   Foreground="{DynamicResource PrimaryTextColor}" />
+
+							<!-- Themes Grid (like Collectibles) -->
+							<ListBox Grid.Row="1"
+													ItemsSource="{Binding AvailableThemesList}" 
+													SelectedItem="{Binding SelectedTheme}"
+													ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+													SelectionMode="Single"
+													Background="{DynamicResource BackgroundColor}">
+								<ListBox.ItemsPanel>
+									<ItemsPanelTemplate>
+										<WrapPanel IsItemsHost="True" />
+									</ItemsPanelTemplate>
+								</ListBox.ItemsPanel>
+								<ListBox.ItemContainerStyle>
+									<Style TargetType="{x:Type ListBoxItem}">
+										<Setter Property="Margin" Value="0,0,12,12" />
+										<Setter Property="Padding" Value="0" />
+									</Style>
+								</ListBox.ItemContainerStyle>
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<Border Width="250" Height="320" CornerRadius="12" BorderBrush="#DDD" BorderThickness="1" Background="{DynamicResource CardBackgroundColor}" Padding="10">
+											<StackPanel>
+												<!-- Theme Preview Area -->
+												<Border Height="220" CornerRadius="8" Background="{DynamicResource CardBackgroundColor}" ClipToBounds="True" Padding="10">
+													<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+														<!-- Preview using Icon Glyph -->
+														<TextBlock Text="{Binding IconGlyph}" 
+																   FontSize="56"
+																   HorizontalAlignment="Center"
+																   Foreground="{DynamicResource AccentColor}"
+																   Margin="0,0,0,8" />
+														<TextBlock Text="{Binding Name}" 
+																   HorizontalAlignment="Center"
+																   FontSize="12"
+																   FontWeight="SemiBold"
+																   Foreground="{DynamicResource PrimaryTextColor}" />
+													</StackPanel>
+												</Border>
+												<TextBlock Text="{Binding Name}" 
+														   FontWeight="SemiBold" 
+														   Margin="0,10,0,0" 
+														   FontSize="14"
+														   TextWrapping="Wrap" 
+														   Height="36"
+														   TextTrimming="CharacterEllipsis"
+														   Foreground="{DynamicResource PrimaryTextColor}" />
+												<TextBlock Text="{Binding IsDark, StringFormat='{}Mode: {0:Yes,No}'}" 
+														   FontSize="11" 
+														   Foreground="{DynamicResource AccentColor}"
+														   Margin="0,4,0,0" />
+											</StackPanel>
+										</Border>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+
+							<!-- Theme Detail Panel -->
+							<Border Grid.Row="2" 
+									Margin="0,12,0,0" 
+									Padding="12" 
+									BorderBrush="#DDD" 
+									BorderThickness="1" 
+									CornerRadius="8" 
+									Background="{DynamicResource CardBackgroundColor}"
+									Visibility="{Binding SelectedTheme, Converter={StaticResource NullToVisibilityConverter}}">
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*" />
+										<ColumnDefinition Width="200" />
+									</Grid.ColumnDefinitions>
+									<StackPanel>
+										<TextBlock Text="{Binding SelectedTheme.Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" />
+										<TextBlock Text="{Binding SelectedTheme.IsDark, StringFormat='{}Theme Mode: {0:Dark,Light}'}" 
+												   FontSize="13" 
+												   Foreground="{DynamicResource AccentColor}" 
+												   Margin="0,4,0,8" />
+										<TextBlock Text="Click a theme to apply it." 
+										   TextWrapping="Wrap" 
+										   Foreground="{DynamicResource PrimaryTextColor}"
+										   Margin="0,8,0,0" />
+										<Button Content="Apply This Theme"
+												Click="ApplySelectedTheme_Click"
+												Margin="0,12,0,0"
+												Padding="12,6"
+												ToolTip="Apply the selected theme to your application" />
+									</StackPanel>
+									<StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+										<TextBlock Text="{Binding SelectedTheme.IconGlyph}" 
+												   FontSize="72"
+												   HorizontalAlignment="Center"
+												   Foreground="{DynamicResource AccentColor}"
+												   Margin="0,0,0,4" />
+										<TextBlock Text="{Binding SelectedTheme.Name}" 
+												   FontSize="12"
+												   HorizontalAlignment="Center"
+												   Foreground="{DynamicResource SecondaryTextColor}" />
+									</StackPanel>
 								</Grid>
 							</Border>
 						</Grid>

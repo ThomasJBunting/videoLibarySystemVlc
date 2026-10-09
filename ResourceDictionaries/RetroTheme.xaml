@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<SolidColorBrush x:Key="BackgroundColor" Color="#0E0B1A" />
+	<SolidColorBrush x:Key="CardBackgroundColor" Color="#1C1430" />
+	<SolidColorBrush x:Key="PrimaryTextColor" Color="#F9F4D2" />
+	<SolidColorBrush x:Key="SecondaryTextColor" Color="#D9C77B" />
+	<SolidColorBrush x:Key="AccentColor" Color="#FF5FC4" />
+
+	<Style TargetType="TabItem">
+		<Setter Property="Background" Value="#1C1430" />
+		<Setter Property="Foreground" Value="#F9F4D2" />
+		<Setter Property="BorderBrush" Value="#6D4ACD" />
+		<Setter Property="BorderThickness" Value="1,1,1,0" />
+		<Setter Property="Padding" Value="12,8" />
+		<Setter Property="Margin" Value="0,0,2,0" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="TabItem">
+					<Border Name="Border"
+							Background="{TemplateBinding Background}"
+							BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}"
+							CornerRadius="4,4,0,0">
+						<ContentPresenter x:Name="ContentSite"
+										  VerticalAlignment="Center"
+										  HorizontalAlignment="Center"
+										  ContentSource="Header"
+										  Margin="{TemplateBinding Padding}" />
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsSelected" Value="True">
+							<Setter TargetName="Border" Property="Background" Value="#261946" />
+							<Setter Property="Foreground" Value="#FFED82" />
+						</Trigger>
+						<Trigger Property="IsMouseOver" Value="True">
+							<Setter TargetName="Border" Property="Background" Value="#312052" />
+							<Setter Property="Foreground" Value="#FFED82" />
+						</Trigger>
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="IsSelected" Value="True" />
+								<Condition Property="IsMouseOver" Value="True" />
+							</MultiTrigger.Conditions>
+							<Setter TargetName="Border" Property="Background" Value="#261946" />
+							<Setter Property="Foreground" Value="#FFED82" />
+						</MultiTrigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

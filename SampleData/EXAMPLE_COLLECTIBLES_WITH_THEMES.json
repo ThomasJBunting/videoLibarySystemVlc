@@ -1,0 +1,111 @@
+{
+  "collectibles": [
+	{
+	  "id": "pokemon-001",
+	  "name": "Bulbasaur Card",
+	  "description": "The Seed Pokémon. A strange seed was planted on its back at birth.",
+	  "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+	  "dropWeight": 30,
+	  "rarity": "Common"
+	}
+  ],
+  "themes": [
+	{
+	  "id": "Retro",
+	  "name": "Retro 90s",
+	  "description": "Neon-soaked nostalgia from the 1990s. Vibrant colors, bold gradients, and that unmistakable retro vibe. Perfect for video enthusiasts who remember the glory days of CRT monitors and VHS.",
+	  "iconGlyph": "◉",
+	  "dropWeight": 15,
+	  "rarity": "Uncommon",
+	  "isDark": true,
+	  "resourceUri": "/ResourceDictionaries/RetroTheme.xaml",
+	  "imageUrl": null,
+	  "relatedImageUrls": null,
+	  "themeData": {
+		"accentColor": "#FF00FF",
+		"secondaryColor": "#00FFFF",
+		"style": "cyberpunk"
+	  }
+	},
+	{
+	  "id": "wood-panel",
+	  "name": "Wood Panel",
+	  "description": "Brings the warm, natural aesthetic of wood paneling to your video library. Inspired by retro home entertainment systems with beautiful wood grain textures and warm tones.",
+	  "iconGlyph": "🌳",
+	  "dropWeight": 12,
+	  "rarity": "Uncommon",
+	  "isDark": true,
+	  "resourceUri": "/ResourceDictionaries/WoodPanelTheme.xaml",
+	  "imageUrl": "https://example.com/images/wood-panel-preview.jpg",
+	  "relatedImageUrls": [
+		"https://example.com/images/wood-grain-dark.jpg",
+		"https://example.com/images/wood-grain-light.jpg",
+		"https://example.com/images/wood-panel-texture.jpg"
+	  ],
+	  "themeData": {
+		"woodTone": "dark-walnut",
+		"grainPattern": "natural",
+		"primaryColor": "#8B4513",
+		"accentColor": "#D2B48C",
+		"style": "wood-veneer"
+	  }
+	},
+	{
+	  "id": "neon-noir",
+	  "name": "Neon Noir",
+	  "description": "Dark cyberpunk aesthetic with neon accents. Sharp contrasts and futuristic look.",
+	  "iconGlyph": "💾",
+	  "dropWeight": 10,
+	  "rarity": "Rare",
+	  "isDark": true,
+	  "resourceUri": "/ResourceDictionaries/NeonNoirTheme.xaml",
+	  "imageUrl": null,
+	  "relatedImageUrls": null,
+	  "themeData": {
+		"primaryColor": "#0A0E27",
+		"accentColor": "#00FF88",
+		"secondaryAccent": "#FF006E",
+		"style": "cyberpunk-noir"
+	  }
+	},
+	{
+	  "id": "mint-cream",
+	  "name": "Mint Cream",
+	  "description": "Cool, refreshing light theme with mint green accents. Perfect for long viewing sessions.",
+	  "iconGlyph": "🍃",
+	  "dropWeight": 8,
+	  "rarity": "Rare",
+	  "isDark": false,
+	  "resourceUri": "/ResourceDictionaries/MintCreamTheme.xaml",
+	  "imageUrl": null,
+	  "relatedImageUrls": null,
+	  "themeData": {
+		"primaryColor": "#F0FFFA",
+		"accentColor": "#00D687",
+		"secondaryColor": "#E0F5EE",
+		"style": "light-fresh"
+	  }
+	},
+	{
+	  "id": "film-noir",
+	  "name": "Film Noir",
+	  "description": "Classic black and white theme with film grain effect. For the cinephile.",
+	  "iconGlyph": "🎬",
+	  "dropWeight": 20,
+	  "rarity": "Common",
+	  "isDark": true,
+	  "resourceUri": "/ResourceDictionaries/FilmNoirTheme.xaml",
+	  "imageUrl": "https://example.com/images/film-noir-preview.jpg",
+	  "relatedImageUrls": [
+		"https://example.com/images/film-grain-1.jpg",
+		"https://example.com/images/film-grain-2.jpg"
+	  ],
+	  "themeData": {
+		"primaryColor": "#1A1A1A",
+		"accentColor": "#E8E8E8",
+		"grainIntensity": 0.3,
+		"style": "classic-film"
+	  }
+	}
+  ]
+}
