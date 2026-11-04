@@ -9,6 +9,20 @@ namespace VideoLibrarySystemVlc.Services;
 /// </summary>
 public sealed class BackRoomsService
 {
+	public enum JsonSourceStatus
+	{
+		Success,
+		DefaultFallback,
+		EmbeddedFallback,
+		Failed
+	}
+
+	public sealed record JsonSourceValidationResult(
+		JsonSourceStatus Status,
+		string? SourceUsed,
+		string Message,
+		int ItemCount);
+
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
 		PropertyNameCaseInsensitive = true
@@ -117,6 +131,77 @@ public sealed class BackRoomsService
 
 		System.Diagnostics.Debug.WriteLine("[BackRooms] All configured sources failed, loading fallback collectibles and themes");
 		return await LoadFallbackCollectiblesAndThemesAsync();
+	}
+
+	public async Task<JsonSourceValidationResult> ValidateCollectiblesSourceAsync(string? sourceUrl)
+	{
+		var candidateUrls = new List<string>();
+		if (!string.IsNullOrWhiteSpace(sourceUrl))
+		{
+			candidateUrls.Add(sourceUrl.Trim());
+		}
+
+		if (!candidateUrls.Contains(AppSettings.DefaultCollectiblesSourceUrl, StringComparer.OrdinalIgnoreCase))
+		{
+			candidateUrls.Add(AppSettings.DefaultCollectiblesSourceUrl);
+		}
+
+		foreach (var candidate in candidateUrls.Distinct(StringComparer.OrdinalIgnoreCase))
+		{
+			if (candidate.Equals("fallback", StringComparison.OrdinalIgnoreCase))
+			{
+				var fallback = await LoadFallbackCollectiblesAndThemesAsync();
+				if (fallback.Item1.Count > 0)
+				{
+					return new JsonSourceValidationResult(
+						JsonSourceStatus.EmbeddedFallback,
+						"embedded fallback",
+						$"⚠ Using built-in local fallback for collectibles ({fallback.Item1.Count} available).",
+						fallback.Item1.Count);
+				}
+			}
+
+			try
+			{
+				var json = await LoadJsonFromSourceAsync(candidate);
+				if (string.IsNullOrWhiteSpace(json))
+				{
+					continue;
+				}
+
+				var (collectibles, themes) = CollectiblesStore.ParseCollectiblesJson(json);
+				if (collectibles.Count > 0)
+				{
+					var isConfiguredSource = !string.IsNullOrWhiteSpace(sourceUrl)
+						&& string.Equals(candidate, sourceUrl.Trim(), StringComparison.OrdinalIgnoreCase);
+					var status = isConfiguredSource ? JsonSourceStatus.Success : JsonSourceStatus.DefaultFallback;
+					var message = isConfiguredSource
+						? $"✓ Loaded {collectibles.Count} collectibles from the configured source."
+						: $"⚠ Loaded {collectibles.Count} collectibles from the default web fallback.";
+					return new JsonSourceValidationResult(status, candidate, message, collectibles.Count);
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[BackRooms] Error validating collectibles source {candidate}: {ex.Message}");
+			}
+		}
+
+		var embedded = await LoadFallbackCollectiblesAndThemesAsync();
+		if (embedded.Item1.Count > 0)
+		{
+			return new JsonSourceValidationResult(
+				JsonSourceStatus.EmbeddedFallback,
+				"embedded fallback",
+				$"⚠ Using built-in local fallback for collectibles ({embedded.Item1.Count} available).",
+				embedded.Item1.Count);
+		}
+
+		return new JsonSourceValidationResult(
+			JsonSourceStatus.Failed,
+			sourceUrl,
+			"✗ Could not load a valid collectibles JSON file from the configured source or fallbacks.",
+			0);
 	}
 
 	/// <summary>

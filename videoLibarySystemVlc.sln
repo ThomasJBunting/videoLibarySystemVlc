@@ -9,6 +9,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Json", "Json", "{6D37022A-89D1-4946-8627-D0CCFBB0F969}"
 	ProjectSection(SolutionItems) = preProject
 		..\videoLibarySystemVlcJson\JSON\collectibles.json = ..\videoLibarySystemVlcJson\JSON\collectibles.json
+		..\videoLibarySystemVlcJson\JSON\collections_2.json = ..\videoLibarySystemVlcJson\JSON\collections_2.json
 		..\videoLibarySystemVlcJson\JSON\reviews.json = ..\videoLibarySystemVlcJson\JSON\reviews.json
 	EndProjectSection
 EndProject

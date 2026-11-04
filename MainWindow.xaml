@@ -453,9 +453,13 @@
 								 Foreground="{DynamicResource PrimaryTextColor}" 
 								 Background="{DynamicResource CardBackgroundColor}" />
 						<Button Content="Save Collectibles URL" 
-								Margin="0,4,0,16" 
+								Margin="0,4,0,8" 
 								Padding="10,4" 
 								Click="SaveCollectiblesUrl_Click" />
+						<TextBlock Text="{Binding CollectiblesSourceStatusText}" 
+							   Foreground="{Binding CollectiblesSourceStatusBrush}" 
+							   FontWeight="SemiBold" 
+							   Margin="0,0,0,16" />
 
 						<!-- Ticker Reviews URL -->
 						<TextBlock Text="Ticker Tape Reviews URL (or file path)" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />
@@ -470,9 +474,13 @@
 								 Foreground="{DynamicResource PrimaryTextColor}" 
 								 Background="{DynamicResource CardBackgroundColor}" />
 						<Button Content="Save Ticker Reviews URL" 
-								Margin="0,4,0,16" 
+								Margin="0,4,0,8" 
 								Padding="10,4" 
 								Click="SaveTickerReviewsUrl_Click" />
+						<TextBlock Text="{Binding TickerReviewsStatusText}" 
+							   Foreground="{Binding TickerReviewsStatusBrush}" 
+							   FontWeight="SemiBold" 
+							   Margin="0,0,0,16" />
 
 						<!-- Late Fee URL -->
 						<TextBlock Text="Late Fee Payment URL" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,4" />
@@ -639,11 +647,12 @@
 							</Grid>
 
 							<ListBox Grid.Row="2"
-												ItemsSource="{Binding BackRoomsCollectibles}" 
-												SelectedItem="{Binding SelectedCollectible}"
-									 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-									 SelectionMode="Single"
-									 Background="{DynamicResource BackgroundColor}" d:ItemsSource="{d:SampleData ItemCount=5}">
+										ItemsSource="{Binding BackRoomsCollectibles}" 
+										SelectedItem="{Binding SelectedCollectible}"
+										SelectionChanged="CollectiblesGrid_SelectionChanged"
+										ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+										SelectionMode="Single"
+										Background="{DynamicResource BackgroundColor}" d:ItemsSource="{d:SampleData ItemCount=5}">
 								<ListBox.ItemsPanel>
 									<ItemsPanelTemplate>
 										<WrapPanel IsItemsHost="True" />
@@ -756,11 +765,12 @@
 
 							<!-- Themes Grid (like Collectibles) -->
 							<ListBox Grid.Row="1"
-													ItemsSource="{Binding AvailableThemesList}" 
-													SelectedItem="{Binding SelectedTheme}"
-													ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-													SelectionMode="Single"
-													Background="{DynamicResource BackgroundColor}">
+										ItemsSource="{Binding AvailableThemesList}" 
+										SelectedItem="{Binding SelectedTheme}"
+										SelectionChanged="ThemesGrid_SelectionChanged"
+										ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+										SelectionMode="Single"
+										Background="{DynamicResource BackgroundColor}">
 								<ListBox.ItemsPanel>
 									<ItemsPanelTemplate>
 										<WrapPanel IsItemsHost="True" />

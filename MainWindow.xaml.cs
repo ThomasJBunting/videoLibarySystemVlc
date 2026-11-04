@@ -241,6 +241,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private int backRoomsGems = 0;
 	private string tickerTapeText = string.Empty;
 	private bool tickerTapeVisible = true;
+	private string collectiblesSourceStatusText = "Not checked yet.";
+	private string tickerReviewsStatusText = "Not checked yet.";
+	private System.Windows.Media.Brush collectiblesSourceStatusBrush = System.Windows.Media.Brushes.Gray;
+	private System.Windows.Media.Brush tickerReviewsStatusBrush = System.Windows.Media.Brushes.Gray;
 
 	// Theme properties
 	private ObservableCollection<ThemeDefinition> availableThemesList = [];
@@ -574,6 +578,30 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
             }
         }
+    }
+
+    public string CollectiblesSourceStatusText
+    {
+        get => collectiblesSourceStatusText;
+        set => SetField(ref collectiblesSourceStatusText, value);
+    }
+
+    public string TickerReviewsStatusText
+    {
+        get => tickerReviewsStatusText;
+        set => SetField(ref tickerReviewsStatusText, value);
+    }
+
+    public System.Windows.Media.Brush CollectiblesSourceStatusBrush
+    {
+        get => collectiblesSourceStatusBrush;
+        set => SetField(ref collectiblesSourceStatusBrush, value);
+    }
+
+    public System.Windows.Media.Brush TickerReviewsStatusBrush
+    {
+        get => tickerReviewsStatusBrush;
+        set => SetField(ref tickerReviewsStatusBrush, value);
     }
 
     public ObservableCollection<ThemeDefinition> AvailableThemesList
@@ -1294,6 +1322,54 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         LootCrateInfoSection.Visibility = selectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// <summary>
+    /// Handles selection changes in the Collectibles grid.
+    /// Automatically switches to the Collectibles section when a collectible is clicked.
+    /// </summary>
+    private void CollectiblesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.AddedItems.Count > 0 && e.AddedItems[0] is Collectible collectible)
+        {
+            SelectCollectibleAndSwitchTab(collectible);
+        }
+    }
+
+    /// <summary>
+    /// Handles selection changes in the Themes grid.
+    /// Automatically switches to the Themes section when a theme is clicked.
+    /// </summary>
+    private void ThemesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.AddedItems.Count > 0 && e.AddedItems[0] is ThemeDefinition theme)
+        {
+            SelectThemeAndSwitchTab(theme);
+        }
+    }
+
+    /// <summary>
+    /// Switch to the Collectibles section and select the specified collectible.
+    /// </summary>
+    private void SelectCollectibleAndSwitchTab(Collectible collectible)
+    {
+        if (BackRoomsSectionList != null)
+        {
+            BackRoomsSectionList.SelectedIndex = 0; // Collectibles tab
+        }
+        SelectedCollectible = collectible;
+    }
+
+    /// <summary>
+    /// Switch to the Themes section and select the specified theme.
+    /// </summary>
+    private void SelectThemeAndSwitchTab(ThemeDefinition theme)
+    {
+        if (BackRoomsSectionList != null)
+        {
+            BackRoomsSectionList.SelectedIndex = 1; // Themes tab
+        }
+        SelectedTheme = theme;
+    }
+
     private void GemCountTextBox_LostFocus(object sender, RoutedEventArgs e)
     {
         // Parse gem count from text box (supports manual editing)
@@ -1476,9 +1552,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private async void SaveCollectiblesUrl_Click(object sender, RoutedEventArgs e)
     {
         stateStore.Save(appState);
-        StatusText = "Collectibles URL saved.";
 
-        // Reload collectibles
+        var validation = await backRoomsService.ValidateCollectiblesSourceAsync(CollectiblesSourceUrl);
+        ApplyJsonSourceStatus(validation, isCollectibles: true);
+
         if (!string.IsNullOrEmpty(CollectiblesSourceUrl))
         {
             availableCollectibles = await backRoomsService.LoadCollectibleDefinitionsAsync(CollectiblesSourceUrl);
@@ -1488,22 +1565,67 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     ? $"{availableCollectibles.Count} collectibles available to win!"
                     : "No collectibles found at URL.";
             }
-            StatusText = $"Loaded {availableCollectibles.Count} collectibles.";
+            StatusText = validation.Message;
+            RefreshVisibleCollectibles();
         }
     }
 
     private async void SaveTickerReviewsUrl_Click(object sender, RoutedEventArgs e)
     {
         stateStore.Save(appState);
-        StatusText = "Ticker reviews URL saved.";
 
-        // Reload reviews
+        var validation = await tickerTapeService.ValidateReviewsSourceAsync(TickerReviewsUrl);
+        ApplyJsonSourceStatus(validation, isCollectibles: false);
+
         if (!string.IsNullOrEmpty(TickerReviewsUrl))
         {
             var reviews = await tickerTapeService.LoadReviewsAsync(TickerReviewsUrl);
             TickerTapeText = tickerTapeService.FormatReviewsForDisplay(reviews);
+            StatusText = validation.Message;
+        }
+    }
 
-            StatusText = $"Loaded {reviews.Count} reviews.";
+    private void ApplyJsonSourceStatus(BackRoomsService.JsonSourceValidationResult validation, bool isCollectibles)
+    {
+        var brush = validation.Status switch
+        {
+            BackRoomsService.JsonSourceStatus.Success => System.Windows.Media.Brushes.Green,
+            BackRoomsService.JsonSourceStatus.DefaultFallback => System.Windows.Media.Brushes.Goldenrod,
+            BackRoomsService.JsonSourceStatus.EmbeddedFallback => System.Windows.Media.Brushes.DarkOrange,
+            _ => System.Windows.Media.Brushes.Red
+        };
+
+        if (isCollectibles)
+        {
+            CollectiblesSourceStatusBrush = brush;
+            CollectiblesSourceStatusText = validation.Message;
+        }
+        else
+        {
+            TickerReviewsStatusBrush = brush;
+            TickerReviewsStatusText = validation.Message;
+        }
+    }
+
+    private void ApplyJsonSourceStatus(TickerTapeService.JsonSourceValidationResult validation, bool isCollectibles)
+    {
+        var brush = validation.Status switch
+        {
+            TickerTapeService.JsonSourceStatus.Success => System.Windows.Media.Brushes.Green,
+            TickerTapeService.JsonSourceStatus.DefaultFallback => System.Windows.Media.Brushes.Goldenrod,
+            TickerTapeService.JsonSourceStatus.EmbeddedFallback => System.Windows.Media.Brushes.DarkOrange,
+            _ => System.Windows.Media.Brushes.Red
+        };
+
+        if (isCollectibles)
+        {
+            CollectiblesSourceStatusBrush = brush;
+            CollectiblesSourceStatusText = validation.Message;
+        }
+        else
+        {
+            TickerReviewsStatusBrush = brush;
+            TickerReviewsStatusText = validation.Message;
         }
     }
 

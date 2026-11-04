@@ -9,6 +9,20 @@ namespace VideoLibrarySystemVlc.Services;
 /// </summary>
 public sealed class TickerTapeService
 {
+	public enum JsonSourceStatus
+	{
+		Success,
+		DefaultFallback,
+		EmbeddedFallback,
+		Failed
+	}
+
+	public sealed record JsonSourceValidationResult(
+		JsonSourceStatus Status,
+		string? SourceUsed,
+		string Message,
+		int ItemCount);
+
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
 		PropertyNameCaseInsensitive = true
@@ -56,6 +70,54 @@ public sealed class TickerTapeService
 		}
 
 		return [];
+	}
+
+	public async Task<JsonSourceValidationResult> ValidateReviewsSourceAsync(string? sourceUrl)
+	{
+		var candidateUrls = new List<string>();
+		if (!string.IsNullOrWhiteSpace(sourceUrl))
+		{
+			candidateUrls.Add(sourceUrl.Trim());
+		}
+
+		if (!candidateUrls.Contains(AppSettings.DefaultTickerReviewsUrl, StringComparer.OrdinalIgnoreCase))
+		{
+			candidateUrls.Add(AppSettings.DefaultTickerReviewsUrl);
+		}
+
+		foreach (var candidate in candidateUrls.Distinct(StringComparer.OrdinalIgnoreCase))
+		{
+			try
+			{
+				var json = await LoadJsonFromSourceAsync(candidate);
+				if (string.IsNullOrWhiteSpace(json))
+				{
+					continue;
+				}
+
+				var reviews = JsonSerializer.Deserialize<List<TickerReview>>(json, JsonOptions);
+				if (reviews is not null && reviews.Count > 0)
+				{
+					var isConfiguredSource = !string.IsNullOrWhiteSpace(sourceUrl)
+						&& string.Equals(candidate, sourceUrl.Trim(), StringComparison.OrdinalIgnoreCase);
+					var status = isConfiguredSource ? JsonSourceStatus.Success : JsonSourceStatus.DefaultFallback;
+					var message = isConfiguredSource
+						? $"✓ Loaded {reviews.Count} ticker reviews from the configured source."
+						: $"⚠ Loaded {reviews.Count} ticker reviews from the default web fallback.";
+					return new JsonSourceValidationResult(status, candidate, message, reviews.Count);
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[TickerTape] Error validating reviews source {candidate}: {ex.Message}");
+			}
+		}
+
+		return new JsonSourceValidationResult(
+			JsonSourceStatus.Failed,
+			sourceUrl,
+			"✗ Could not load a valid ticker review JSON file from the configured source or fallback URL.",
+			0);
 	}
 
 	private static async Task<string?> LoadJsonFromSourceAsync(string sourceUrl)
